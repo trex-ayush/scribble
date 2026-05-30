@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { PenLine, User, LogOut, FileText, Search, ChevronDown, Users, Activity } from 'lucide-react';
+import { PenLine, User, LogOut, FileText, Search, ChevronDown, Users, Settings } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth.js';
 import { postsApi } from '../../api/posts.js';
 import { Button } from '../ui/Button.jsx';
@@ -116,7 +116,7 @@ const UserMenu = ({ user, onLogout }) => {
 
   const items = [
     { to: `/@${user.username}`, icon: User, label: 'Profile' },
-    { to: '/activity', icon: Activity, label: 'Activity Log' },
+    { to: '/settings', icon: Settings, label: 'Settings' },
   ];
 
   return (

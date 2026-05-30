@@ -69,7 +69,8 @@ export const Footer = () => (
         <ul className="space-y-2">
           <FooterLink to="/write">Write a story</FooterLink>
           <FooterLink to="/drafts">Your drafts</FooterLink>
-          <FooterLink to="/activity">Activity log</FooterLink>
+          <FooterLink to="/settings/activity">Activity log</FooterLink>
+          <FooterLink to="/settings/api">API settings</FooterLink>
           <FooterLink to="/settings">Settings</FooterLink>
         </ul>
       </div>

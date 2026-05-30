@@ -32,6 +32,14 @@ const userSchema = new mongoose.Schema(
     followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     refreshToken: { type: String, select: false },
+    // Public API (Basic Auth) credentials. apiKey is the username, apiSecret
+    // is the bcrypt-hashed password (shown in plaintext only once at creation).
+    apiKey: { type: String, unique: true, sparse: true, index: true },
+    apiSecret: { type: String, select: false },
+    // Plaintext secret kept so the owner can always view it in API Settings
+    // (trade-off: convenience over write-once secrecy, per product choice).
+    apiSecretPlain: { type: String, select: false },
+    apiEnabled: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
@@ -50,7 +58,13 @@ userSchema.methods.toPublicJSON = function () {
   const obj = this.toObject();
   delete obj.password;
   delete obj.refreshToken;
+  delete obj.apiSecret;
+  delete obj.apiSecretPlain;
   return obj;
+};
+
+userSchema.methods.compareApiSecret = function (candidate) {
+  return bcrypt.compare(candidate, this.apiSecret);
 };
 
 userSchema.virtual('followerCount').get(function () {
