@@ -8,7 +8,10 @@ import { WritePost } from './pages/WritePost.jsx';
 import { Drafts } from './pages/Drafts.jsx';
 import { PostDetail } from './pages/PostDetail.jsx';
 import { Profile } from './pages/Profile.jsx';
-import { Settings } from './pages/Settings.jsx';
+import { SettingsLayout } from './pages/settings/SettingsLayout.jsx';
+import { ProfileSettings } from './pages/settings/ProfileSettings.jsx';
+import { ApiSettings } from './pages/settings/ApiSettings.jsx';
+import { ApiDocs } from './pages/settings/ApiDocs.jsx';
 import { ActivityLog } from './pages/ActivityLog.jsx';
 import { NotFound } from './pages/NotFound.jsx';
 import { useAuth } from './hooks/useAuth.js';
@@ -46,12 +49,15 @@ const App = () => {
         />
         <Route
           path="/settings"
-          element={<ProtectedRoute><Settings /></ProtectedRoute>}
-        />
-        <Route
-          path="/activity"
-          element={<ProtectedRoute><ActivityLog /></ProtectedRoute>}
-        />
+          element={<ProtectedRoute><SettingsLayout /></ProtectedRoute>}
+        >
+          <Route index element={<ProfileSettings />} />
+          <Route path="api" element={<ApiSettings />} />
+          <Route path="api-docs" element={<ApiDocs />} />
+          <Route path="activity" element={<ActivityLog />} />
+        </Route>
+        {/* Back-compat: old /activity path redirects into settings. */}
+        <Route path="/activity" element={<Navigate to="/settings/activity" replace />} />
         {/* Profile last among single-segment routes; "@" stripped in Profile. */}
         <Route path="/:username" element={<Profile />} />
         <Route path="*" element={<NotFound />} />

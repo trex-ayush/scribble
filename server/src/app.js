@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import { env } from './config/env.js';
 import router from './routes/index.js';
+import publicRouter from './routes/public.routes.js';
 import { errorMiddleware, notFoundMiddleware } from './middleware/error.middleware.js';
 
 const app = express();
@@ -29,6 +30,10 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
+// Public API (Basic Auth) must be mounted BEFORE the web router so that
+// requests with Basic Auth are handled here; JWT requests pass through
+// via next('router') and are handled by the web router below.
+app.use('/api/v1', publicRouter);
 app.use('/api/v1', router);
 
 app.use(notFoundMiddleware);
