@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Copy, Check } from 'lucide-react';
 
 const formatDate = (iso) => {
@@ -16,13 +17,71 @@ const humanize = (key) =>
     .replace(/[_-]+/g, ' ')
     .replace(/\b\w/g, (c) => c.toUpperCase());
 
-const renderValue = (v) => {
-  if (v === null || v === undefined || v === '') return '—';
-  if (typeof v === 'boolean') return String(v);
-  if (Array.isArray(v)) return v.length ? v.join(', ') : '—';
-  if (typeof v === 'object') return JSON.stringify(v);
-  return String(v);
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/;
+const isObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+
+const PrimitiveValue = ({ value }) => {
+  if (value === null || value === undefined || value === '')
+    return <span className="text-pencil/50">—</span>;
+  if (typeof value === 'boolean') return <span>{String(value)}</span>;
+  if (typeof value === 'string')
+    return <span className="break-all">{ISO_DATE_RE.test(value) ? formatDate(value) : value}</span>;
+  return <span className="break-all">{String(value)}</span>;
 };
+
+// Nested object → its own bordered sub-box with a two-col grid inside
+const SubBox = ({ obj }) => (
+  <div className="mt-1 border border-dashed border-pencil/40 rounded-lg px-3 py-2 space-y-1 bg-muted/20">
+    {Object.entries(obj).map(([k, v]) => (
+      <Row key={k} label={k} value={v} />
+    ))}
+  </div>
+);
+
+// Single row: primitive → inline value; object/array → sub-box below label
+const Row = ({ label, value }) => {
+  if (isObject(value)) {
+    return (
+      <div className="py-1">
+        <span className="font-body text-sm font-semibold text-pencil">{humanize(label)}</span>
+        <SubBox obj={value} />
+      </div>
+    );
+  }
+  if (Array.isArray(value)) {
+    const allPrimitive = value.every((item) => !isObject(item));
+    return (
+      <div className="py-1">
+        <span className="font-body text-sm font-semibold text-pencil">{humanize(label)}</span>
+        {allPrimitive ? (
+          <span className="ml-2 font-body text-sm text-pencil/80">{value.length ? value.join(', ') : '—'}</span>
+        ) : (
+          <div className="mt-1 space-y-1">
+            {value.map((item, i) => (
+              <SubBox key={i} obj={isObject(item) ? item : { value: item }} />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-baseline justify-between gap-4 py-1 border-b border-dashed border-pencil/15 last:border-0">
+      <span className="font-body text-sm text-pencil shrink-0">{humanize(label)}</span>
+      <span className="font-body text-sm text-pencil/70 text-right">
+        <PrimitiveValue value={value} />
+      </span>
+    </div>
+  );
+};
+
+const SimpleObject = ({ obj }) => (
+  <div className="space-y-1">
+    {Object.entries(obj).map(([key, value]) => (
+      <Row key={key} label={key} value={value} />
+    ))}
+  </div>
+);
 
 export const EventDataPanel = ({ log, onClose }) => {
   const [simple, setSimple] = useState(true);
@@ -38,7 +97,7 @@ export const EventDataPanel = ({ log, onClose }) => {
     } catch { /* ignore */ }
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[70] flex justify-end bg-pencil/40" onClick={onClose}>
       <div
         className="w-full max-w-xl h-full bg-paper border-l-[3px] border-pencil shadow-hard-lg flex flex-col"
@@ -99,14 +158,7 @@ export const EventDataPanel = ({ log, onClose }) => {
               {!data ? (
                 <p className="font-body text-pencil/50">No event data available.</p>
               ) : simple ? (
-                <div className="divide-y divide-dashed divide-pencil/20">
-                  {Object.entries(data).map(([key, value]) => (
-                    <div key={key} className="grid grid-cols-[1fr_1.4fr] gap-4 py-2">
-                      <span className="font-body text-pencil">{humanize(key)}</span>
-                      <span className="font-body text-pencil/80 break-words">{renderValue(value)}</span>
-                    </div>
-                  ))}
-                </div>
+                <SimpleObject obj={data} />
               ) : (
                 <pre className="font-mono text-sm text-pencil bg-muted/40 p-4 rounded overflow-auto">
                   {JSON.stringify(data, null, 2)}
@@ -116,6 +168,7 @@ export const EventDataPanel = ({ log, onClose }) => {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
