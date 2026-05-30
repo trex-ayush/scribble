@@ -12,8 +12,8 @@ import { Post } from '../src/models/post.model.js';
 import { Comment } from '../src/models/comment.model.js';
 import { ActivityLog } from '../src/models/activityLog.model.js';
 
-const TEST_USERNAMES = ['logintest', 'actlogtest', 'deltest', 'pgtest'];
-const TEST_TITLES = ['Activity test post', 'Second activity test', 'Panel test post', 'Delete me test'];
+const TEST_USERNAMES = ['logintest', 'actlogtest', 'deltest', 'pgtest', 'apidemo', 'apidemo2', 'apiverify', 'origintest', 'newapitest'];
+const TEST_TITLES = ['Activity test post', 'Second activity test', 'Panel test post', 'Delete me test', 'Posted via public API', 'Web origin post', 'API origin post', 'Getting Started with MERN Stack', 'Getting Started with MERN Stack — Complete Guide', 'Why Tailwind CSS is a Game Changer', 'My Draft Post via API', 'Understanding JWT Authentication', 'New URL test'];
 
 const run = async () => {
   await connectDB();

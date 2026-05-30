@@ -101,7 +101,12 @@ export const ActivityLog = () => {
                 <span className="block text-pencil truncate">{log.actorName || 'You'}</span>
                 <span className="block text-pencil/50 text-xs truncate">{log.actorEmail}</span>
               </span>
-              <span className="text-pencil/80">{log.source}</span>
+              <span className="min-w-0">
+                <span className="block text-pencil/80">{log.source}</span>
+                <span className="text-[10px] font-body text-pencil/50">
+                  {log.origin || 'USER'}
+                </span>
+              </span>
               <span><ActionBadge action={log.action} /></span>
               <button
                 onClick={() => setSelected(log)}

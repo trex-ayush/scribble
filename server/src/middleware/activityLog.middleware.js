@@ -9,6 +9,7 @@ const deriveSource = (path) => {
   if (path.startsWith('/auth/logout')) return 'User Logout';
   if (path.startsWith('/auth/register')) return 'User';
   if (path.startsWith('/auth/refresh')) return null; // noise, skip
+  if (path.startsWith('/api-keys')) return 'API Key';
   if (path.includes('/comments')) return 'Comment';
   if (path.includes('/clap')) return 'Clap';
   if (path.includes('/follow')) return 'Follow';
@@ -17,16 +18,22 @@ const deriveSource = (path) => {
   return 'System';
 };
 
+// Never persist these in the activity payload.
+const SENSITIVE = ['password', 'refreshToken', '__v', 'claps', 'content', 'apiSecret', 'apiSecretPlain'];
+const stripSensitive = (obj) => {
+  const clean = { ...obj };
+  SENSITIVE.forEach((k) => delete clean[k]);
+  return clean;
+};
+
 /**
  * Centralized activity logger — the ONLY place activity is recorded.
- * Any successful non-GET request is logged automatically after the response
- * is sent, so individual controllers stay clean (DRY).
+ * Any successful non-GET request (web app + public API) is logged
+ * automatically after the response is sent, so controllers stay clean.
  */
 export const activityLogger = (req, res, next) => {
   if (!WRITE_METHODS.includes(req.method)) return next();
 
-  // Capture the JSON response so we can pull out the affected resource id
-  // and the actor for routes where auth isn't set (login/register).
   const originalJson = res.json.bind(res);
   let payload;
   res.json = (body) => {
@@ -37,9 +44,9 @@ export const activityLogger = (req, res, next) => {
   res.on('finish', () => {
     if (res.statusCode >= 400) return; // only successful writes
 
-    // By the time 'finish' fires, req.path is restored to the full path, so
-    // derive from originalUrl with the API prefix stripped.
-    const path = req.originalUrl.split('?')[0].replace(/^\/api\/v\d+/, '');
+    const fullPath = req.originalUrl.split('?')[0];
+    const origin = req.apiOrigin === 'API' ? 'API' : 'USER';
+    const path = fullPath.replace(/^\/api\/v\d+/, '');
     const source = deriveSource(path);
     if (!source) return;
 
@@ -48,22 +55,19 @@ export const activityLogger = (req, res, next) => {
     const actorId = req.user?.id || data.user?._id;
     if (!actorId) return; // skip unauthenticated noise
 
+    // Best identifier for the affected resource.
     const eventData =
       resource._id ||
+      resource.apiKey ||      // API Key operations
       req.params.id ||
       req.params.slug ||
       req.params.username ||
-      '';
+      String(actorId);        // settings-style actions act on the user
 
-    // Snapshot of the affected resource, with noisy/sensitive fields removed.
-    const snapshot = { ...resource };
-    ['password', 'refreshToken', '__v', 'claps', 'content'].forEach((k) => delete snapshot[k]);
-    // For requests with a body (settings/profile updates), prefer that.
-    const requestBody = { ...(req.body || {}) };
-    ['password', 'refreshToken'].forEach((k) => delete requestBody[k]);
+    const snapshot = stripSensitive(resource);
+    const requestBody = stripSensitive(req.body || {});
 
-    // DELETE returns 204 with no body, so build the snapshot from the request
-    // (id + identifier) instead of leaving event data empty.
+    // DELETE returns 204 (no body) → build snapshot from the request instead.
     let resolvedPayload;
     if (req.method === 'DELETE') {
       resolvedPayload = {
@@ -84,6 +88,7 @@ export const activityLogger = (req, res, next) => {
       actorEmail: req.user?.email || data.user?.email,
       actorName: data.user?.name || data.user?.username || req.user?.username,
       source,
+      origin,
       action: ACTION_BY_METHOD[req.method],
       method: req.method,
       path: req.originalUrl,
