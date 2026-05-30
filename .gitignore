@@ -1,0 +1,27 @@
+# dependencies
+node_modules/
+**/node_modules/
+
+# env
+.env
+**/.env
+
+# build output
+dist/
+**/dist/
+
+# logs
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# personal notes (not part of the app)
+SSC_*.md
+Constitution_Articles_Revision.md
+GK_GS_QnA_Phasewise.md
+Polity_Questions.md
+skill.md

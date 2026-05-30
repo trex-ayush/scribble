@@ -1,0 +1,59 @@
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
+import TurndownService from 'turndown';
+import { gfm } from 'turndown-plugin-gfm';
+
+marked.setOptions({ gfm: true, breaks: true });
+
+// Single shared HTML -> Markdown converter (GFM: tables, strikethrough, etc.)
+const turndown = new TurndownService({
+  headingStyle: 'atx',
+  codeBlockStyle: 'fenced',
+  bulletListMarker: '-',
+});
+turndown.use(gfm);
+
+/**
+ * Convert (sanitized) HTML back into Markdown.
+ * Used so the live preview can be edited and synced back to the source.
+ * @param {string} html
+ * @returns {string} markdown
+ */
+export const htmlToMarkdown = (html) => {
+  if (!html) return '';
+  return turndown.turndown(DOMPurify.sanitize(html)).trim();
+};
+
+/**
+ * Convert stored post content into safe HTML for rendering.
+ * - 'markdown' content is parsed to HTML via marked.
+ * - 'html' content (from the rich-text editor) is used as-is.
+ * Both are then sanitized with DOMPurify before they reach the DOM.
+ *
+ * @param {string} content raw stored content
+ * @param {'html'|'markdown'} [format='html']
+ * @returns {string} sanitized HTML string
+ */
+export const renderContent = (content, format = 'html') => {
+  if (!content) return '';
+  const html = format === 'markdown' ? marked.parse(content) : content;
+  return DOMPurify.sanitize(html);
+};
+
+/**
+ * Shared prose styling so the reader view and the live preview look identical.
+ * Tailwind arbitrary-variant selectors mirror the hand-drawn design system.
+ */
+export const PROSE_CLASS =
+  'font-body text-pencil leading-relaxed space-y-4 ' +
+  '[&_h1]:font-heading [&_h1]:text-3xl [&_h1]:mt-8 [&_h1]:mb-3 ' +
+  '[&_h2]:font-heading [&_h2]:text-2xl [&_h2]:mt-8 [&_h2]:mb-3 ' +
+  '[&_h3]:font-heading [&_h3]:text-xl [&_h3]:mt-6 [&_h3]:mb-2 ' +
+  '[&_a]:text-ink [&_a]:underline ' +
+  '[&_blockquote]:border-l-4 [&_blockquote]:border-pencil [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-pencil/70 ' +
+  '[&_pre]:bg-pencil [&_pre]:text-paper [&_pre]:p-4 [&_pre]:rounded [&_pre]:overflow-x-auto ' +
+  '[&_code]:bg-muted [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:font-mono [&_code]:text-sm ' +
+  '[&_pre_code]:bg-transparent [&_pre_code]:p-0 ' +
+  '[&_ul]:list-disc [&_ul]:list-inside [&_ol]:list-decimal [&_ol]:list-inside ' +
+  '[&_table]:w-full [&_table]:border-collapse [&_th]:border-2 [&_th]:border-pencil [&_th]:p-2 [&_td]:border [&_td]:border-pencil [&_td]:p-2 ' +
+  '[&_img]:max-w-full [&_img]:border-2 [&_img]:border-pencil';
