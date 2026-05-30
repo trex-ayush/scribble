@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { usersApi } from '../../api/users.js';
 import { UserCard } from './UserCard.jsx';
@@ -27,7 +28,7 @@ export const FollowListModal = ({ username, type, onClose }) => {
     fetch();
   }, [username, type]);
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-pencil/40"
       onClick={onClose}
@@ -65,6 +66,7 @@ export const FollowListModal = ({ username, type, onClose }) => {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
