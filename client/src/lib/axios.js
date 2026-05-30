@@ -46,4 +46,11 @@ api.interceptors.response.use(
   }
 );
 
+// Attach active workspace id so backend knows whose content is targeted.
+api.interceptors.request.use((config) => {
+  const ws = localStorage.getItem('scribble-active-workspace');
+  if (ws && ws !== 'personal') config.headers['X-Workspace-Id'] = ws;
+  return config;
+});
+
 export default api;

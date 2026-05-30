@@ -8,6 +8,7 @@ const ACTION_STYLES = {
   Created: 'bg-ink/10 text-ink border-ink',
   Updated: 'bg-postit text-pencil border-pencil',
   Deleted: 'bg-accent/10 text-accent border-accent',
+  Accessed: 'bg-muted text-pencil/70 border-pencil/40',
 };
 
 const ActionBadge = ({ action }) => (
@@ -64,7 +65,7 @@ export const ActivityLog = () => {
           Activity Log
         </h1>
         <p className="font-body text-pencil/60">
-          A record of all notable actions on your account over the last 90 days.
+          A record of all notable actions on your account.
         </p>
       </div>
 
@@ -98,7 +99,14 @@ export const ActivityLog = () => {
             >
               <span className="text-pencil/80">{formatDate(log.createdAt)}</span>
               <span className="min-w-0">
-                <span className="block text-pencil truncate">{log.actorName || 'You'}</span>
+                <span className="flex items-center gap-1.5">
+                  <span className="text-pencil truncate">{log.actorName || 'You'}</span>
+                  {log.viaTeam && (
+                    <span className="shrink-0 px-1.5 text-[10px] font-body bg-postit text-pencil border border-pencil/40 rounded">
+                      team
+                    </span>
+                  )}
+                </span>
                 <span className="block text-pencil/50 text-xs truncate">{log.actorEmail}</span>
               </span>
               <span className="min-w-0">
