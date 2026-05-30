@@ -9,6 +9,7 @@ const deriveSource = (path) => {
   if (path.startsWith('/auth/logout')) return 'User Logout';
   if (path.startsWith('/auth/register')) return 'User';
   if (path.startsWith('/auth/refresh')) return null; // noise, skip
+  if (path.startsWith('/team/access')) return null; // logged explicitly as "Team Member Login"
   if (path.startsWith('/api-keys')) return 'API Key';
   if (path.includes('/comments')) return 'Comment';
   if (path.includes('/clap')) return 'Clap';
@@ -55,6 +56,13 @@ export const activityLogger = (req, res, next) => {
     const actorId = req.user?.id || data.user?._id;
     if (!actorId) return; // skip unauthenticated noise
 
+    // The account the action belongs to. When a team member acts inside an
+    // owner's workspace (X-Workspace-Id), the action is recorded under the
+    // owner so the owner sees it in their activity log.
+    const wsOwner = req.headers['x-workspace-id'];
+    const accountId = wsOwner && wsOwner !== String(actorId) ? wsOwner : actorId;
+    const viaTeam = accountId !== actorId;
+
     // Best identifier for the affected resource.
     const eventData =
       resource._id ||
@@ -86,7 +94,12 @@ export const activityLogger = (req, res, next) => {
     ActivityLog.create({
       actor: actorId,
       actorEmail: req.user?.email || data.user?.email,
-      actorName: data.user?.name || data.user?.username || req.user?.username,
+      // Always prefer the actor's real name so the same account never shows
+      // "Ayush Kumar Singh" on one row and "ayush" (username) on another.
+      actorName:
+        req.user?.name || data.user?.name || req.user?.username || data.user?.username,
+      account: accountId,
+      viaTeam,
       source,
       origin,
       action: ACTION_BY_METHOD[req.method],

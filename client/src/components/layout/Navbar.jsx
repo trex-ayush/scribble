@@ -4,6 +4,7 @@ import { PenLine, User, LogOut, FileText, Search, ChevronDown, Users, Settings }
 import { useAuth } from '../../hooks/useAuth.js';
 import { postsApi } from '../../api/posts.js';
 import { Button } from '../ui/Button.jsx';
+import { workspaceStore } from '../../store/workspaceStore.js';
 
 const SEARCH_TYPES = [
   { key: 'stories', label: 'Stories', icon: FileText },
@@ -105,6 +106,7 @@ const SearchBar = ({ className = '' }) => {
 const UserMenu = ({ user, onLogout }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
+  const active = workspaceStore((s) => s.active);
 
   useEffect(() => {
     const handler = (e) => {
@@ -114,10 +116,14 @@ const UserMenu = ({ user, onLogout }) => {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const items = [
-    { to: `/@${user.username}`, icon: User, label: 'Profile' },
-    { to: '/settings', icon: Settings, label: 'Settings' },
-  ];
+  // While impersonating, the navbar reflects the OWNER you're acting as.
+  const displayName = active ? active.name : (user.name || user.username);
+  const displayHandle = active ? active.username : user.username;
+
+  const exitAccess = () => {
+    workspaceStore.getState().switchTo(null);
+    window.location.href = '/';
+  };
 
   return (
     <div ref={ref} className="relative">
@@ -126,35 +132,55 @@ const UserMenu = ({ user, onLogout }) => {
         className="flex items-center gap-2 px-3 py-2 font-body text-pencil hover:bg-muted rounded transition-colors"
       >
         <User size={18} strokeWidth={2.5} />
-        <span className="hidden md:inline">{user.username}</span>
+        <span className="hidden md:inline max-w-[120px] truncate">{displayName}</span>
         <ChevronDown size={14} strokeWidth={2.5} />
       </button>
 
       {open && (
         <ul
-          className="absolute right-0 top-full mt-1 w-44 bg-white border-2 border-pencil shadow-hard overflow-hidden z-30"
+          className="absolute right-0 top-full mt-1 w-52 bg-white border-2 border-pencil shadow-hard overflow-hidden z-30"
           style={{ borderRadius: '12px 5px 12px 5px / 5px 12px 5px 12px' }}
         >
-          {items.map(({ to, icon: Icon, label }) => (
-            <li key={to}>
-              <Link
-                to={to}
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-2 px-4 py-2.5 font-body text-sm text-pencil hover:bg-muted transition-colors"
-              >
-                <Icon size={15} strokeWidth={2.5} />
-                {label}
-              </Link>
-            </li>
-          ))}
-          <li className="border-t-2 border-dashed border-pencil/30">
-            <button
-              onClick={() => { setOpen(false); onLogout(); }}
-              className="flex items-center gap-2 w-full text-left px-4 py-2.5 font-body text-sm text-accent hover:bg-accent/10 transition-colors"
+          <li>
+            <Link
+              to={`/@${displayHandle}`}
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 px-4 py-2.5 font-body text-sm text-pencil hover:bg-muted transition-colors"
             >
-              <LogOut size={15} strokeWidth={2.5} />
-              Log out
-            </button>
+              <User size={15} strokeWidth={2.5} />
+              Profile
+            </Link>
+          </li>
+
+          <li>
+            <Link
+              to="/settings"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 px-4 py-2.5 font-body text-sm text-pencil hover:bg-muted transition-colors"
+            >
+              <Settings size={15} strokeWidth={2.5} />
+              Settings
+            </Link>
+          </li>
+
+          <li className="border-t-2 border-dashed border-pencil/30">
+            {active ? (
+              <button
+                onClick={() => { setOpen(false); exitAccess(); }}
+                className="flex items-center gap-2 w-full text-left px-4 py-2.5 font-body text-sm text-pencil hover:bg-muted transition-colors"
+              >
+                <LogOut size={15} strokeWidth={2.5} />
+                Exit access
+              </button>
+            ) : (
+              <button
+                onClick={() => { setOpen(false); onLogout(); }}
+                className="flex items-center gap-2 w-full text-left px-4 py-2.5 font-body text-sm text-accent hover:bg-accent/10 transition-colors"
+              >
+                <LogOut size={15} strokeWidth={2.5} />
+                Log out
+              </button>
+            )}
           </li>
         </ul>
       )}
@@ -181,6 +207,7 @@ export const Navbar = () => {
   }, [isAuthenticated, location.pathname]);
 
   const handleLogout = async () => {
+    workspaceStore.getState().reset();
     await logout();
     navigate('/');
   };

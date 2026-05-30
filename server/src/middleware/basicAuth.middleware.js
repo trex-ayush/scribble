@@ -27,7 +27,7 @@ export const basicAuth = async (req, res, next) => {
       throw ApiError.unauthorized('Invalid API credentials');
     }
 
-    req.user = { id: user._id, email: user.email, username: user.username };
+    req.user = { id: user._id, email: user.email, username: user.username, name: user.name };
     req.apiOrigin = 'API'; // picked up by activityLogger
     next();
   } catch (err) {

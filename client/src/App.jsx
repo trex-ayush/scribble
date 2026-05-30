@@ -12,9 +12,11 @@ import { SettingsLayout } from './pages/settings/SettingsLayout.jsx';
 import { ProfileSettings } from './pages/settings/ProfileSettings.jsx';
 import { ApiSettings } from './pages/settings/ApiSettings.jsx';
 import { ApiDocs } from './pages/settings/ApiDocs.jsx';
+import { TeamMembers } from './pages/settings/TeamMembers.jsx';
 import { ActivityLog } from './pages/ActivityLog.jsx';
 import { NotFound } from './pages/NotFound.jsx';
 import { useAuth } from './hooks/useAuth.js';
+import { workspaceStore } from './store/workspaceStore.js';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -25,7 +27,10 @@ const App = () => {
   const { fetchMe } = useAuth();
 
   useEffect(() => {
-    fetchMe();
+    // Load the user, then their team workspaces for the switcher.
+    fetchMe()
+      .then(() => workspaceStore.getState().loadWorkspaces())
+      .catch(() => {});
   }, []);
 
   return (
@@ -52,6 +57,7 @@ const App = () => {
           element={<ProtectedRoute><SettingsLayout /></ProtectedRoute>}
         >
           <Route index element={<ProfileSettings />} />
+          <Route path="team" element={<TeamMembers />} />
           <Route path="api" element={<ApiSettings />} />
           <Route path="api-docs" element={<ApiDocs />} />
           <Route path="activity" element={<ActivityLog />} />
