@@ -214,7 +214,7 @@ export const Navbar = () => {
 
   return (
     <header className="sticky top-0 z-50 bg-paper/95 backdrop-blur-sm border-b-[3px] border-pencil">
-      <nav className="max-w-5xl mx-auto px-6 py-4 flex items-center gap-4">
+      <nav className="max-w-7xl mx-auto px-6 py-4 flex items-center gap-4">
         <Link to="/" className="flex items-center gap-2 group shrink-0">
           <PenLine
             size={28}
