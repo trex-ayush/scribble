@@ -10,16 +10,30 @@ const resolveLimit = (limit) => {
   return ALLOWED_PER_PAGE.includes(n) ? n : POSTS_PER_PAGE;
 };
 
+// Only these fields may be set from a client request body. Prevents mass
+// assignment of protected fields (author, slug, claps, readingTime, createdAt).
+const WRITABLE_FIELDS = ['title', 'content', 'excerpt', 'tags', 'status', 'format'];
+const pickWritable = (data = {}) =>
+  WRITABLE_FIELDS.reduce((acc, k) => {
+    if (data[k] !== undefined) acc[k] = data[k];
+    return acc;
+  }, {});
+
+// Escape user input before using it inside a RegExp (prevents ReDoS / regex
+// injection in search) and guarantee a string (blocks NoSQL operator objects).
+const escapeRegex = (str) => String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 export const postService = {
   async getFeed({ page = 1, tag, search, limit }) {
     const perPage = resolveLimit(limit);
     const filter = { status: 'published' };
-    if (tag) filter.tags = tag;
+    // Coerce to string so a crafted object (e.g. ?tag[$ne]=) can't inject a
+    // NoSQL operator into the query.
+    if (tag) filter.tags = String(tag);
     if (search) {
-      filter.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { excerpt: { $regex: search, $options: 'i' } },
-      ];
+      // Escape + anchor as a plain RegExp to prevent regex injection / ReDoS.
+      const safe = new RegExp(escapeRegex(search), 'i');
+      filter.$or = [{ title: safe }, { excerpt: safe }];
     }
 
     const skip = (page - 1) * perPage;
@@ -56,13 +70,13 @@ export const postService = {
   },
 
   async createPost(userId, data) {
-    return Post.create({ ...data, author: userId });
+    return Post.create({ ...pickWritable(data), author: userId });
   },
 
   async updatePost(postId, userId, data) {
     const post = await Post.findOne({ _id: postId, author: userId });
     if (!post) throw ApiError.notFound('Post not found');
-    Object.assign(post, data);
+    Object.assign(post, pickWritable(data));
     return post.save();
   },
 

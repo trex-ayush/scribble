@@ -21,7 +21,8 @@ export const userService = {
       : { username: identifier };
     const user = await User.findOne(query);
     if (!user) throw ApiError.notFound('User not found');
-    return user.toPublicJSON();
+    // Public endpoint (no auth) — never leak email / apiKey / credentials.
+    return user.toProfileJSON();
   },
 
   // field: 'followers' | 'following' — returns the populated user list.
