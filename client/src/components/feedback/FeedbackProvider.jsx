@@ -146,7 +146,7 @@ export const FeedbackProvider = ({ children }) => {
       {children}
 
       {/* Toast stack */}
-      <div className="fixed top-20 right-4 z-[90] flex flex-col gap-3">
+      <div className="fixed top-4 right-4 z-[90] flex flex-col gap-3">
         {toasts.map((t) => (
           <Toast key={t.id} toast={t} onClose={() => dismiss(t.id)} />
         ))}
