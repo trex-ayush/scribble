@@ -54,12 +54,29 @@ userSchema.methods.comparePassword = function (candidate) {
   return bcrypt.compare(candidate, this.password);
 };
 
+// Owner-facing view: safe to return to the account owner themselves
+// (login / register / me / profile update). Still includes the owner's email.
 userSchema.methods.toPublicJSON = function () {
   const obj = this.toObject();
   delete obj.password;
   delete obj.refreshToken;
   delete obj.apiSecret;
   delete obj.apiSecretPlain;
+  return obj;
+};
+
+// Third-party view: returned to ANYONE viewing another user's profile.
+// Must NOT leak PII or credentials — strips email, API key, and all secrets.
+// Keeps follower/following arrays since the UI derives counts + follow state.
+userSchema.methods.toProfileJSON = function () {
+  const obj = this.toObject();
+  delete obj.password;
+  delete obj.refreshToken;
+  delete obj.apiSecret;
+  delete obj.apiSecretPlain;
+  delete obj.email;
+  delete obj.apiKey;
+  delete obj.apiEnabled;
   return obj;
 };
 
