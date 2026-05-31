@@ -5,6 +5,8 @@ import { useAuth } from '../../hooks/useAuth.js';
 import { postsApi } from '../../api/posts.js';
 import { Button } from '../ui/Button.jsx';
 import { workspaceStore } from '../../store/workspaceStore.js';
+import { notificationStore } from '../../store/notificationStore.js';
+import { NotificationBell } from './NotificationBell.jsx';
 
 const SEARCH_TYPES = [
   { key: 'stories', label: 'Stories', icon: FileText },
@@ -208,6 +210,7 @@ export const Navbar = () => {
 
   const handleLogout = async () => {
     workspaceStore.getState().reset();
+    notificationStore.getState().reset();
     await logout();
     navigate('/');
   };
@@ -248,6 +251,7 @@ export const Navbar = () => {
                   </span>
                 )}
               </Link>
+              <NotificationBell />
               <UserMenu user={user} onLogout={handleLogout} />
             </>
           ) : (

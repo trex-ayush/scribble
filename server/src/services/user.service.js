@@ -1,6 +1,7 @@
 import { User } from '../models/user.model.js';
 import { Post } from '../models/post.model.js';
 import { ApiError } from '../utils/ApiError.js';
+import { notificationService } from './notification.service.js';
 
 const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -69,6 +70,15 @@ export const userService = {
       User.findByIdAndUpdate(followerId, { [op]: { following: target._id } }),
       User.findByIdAndUpdate(target._id, { [op]: { followers: followerId } }),
     ]);
+
+    // Notify the target only when starting to follow (not on unfollow).
+    if (!isFollowing) {
+      await notificationService.notify({
+        recipient: target._id,
+        actor: followerId,
+        type: 'follow',
+      });
+    }
 
     return { following: !isFollowing };
   },
