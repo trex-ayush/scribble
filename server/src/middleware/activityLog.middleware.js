@@ -57,11 +57,18 @@ export const activityLogger = (req, res, next) => {
     if (!actorId) return; // skip unauthenticated noise
 
     // The account the action belongs to. When a team member acts inside an
-    // owner's workspace (X-Workspace-Id), the action is recorded under the
-    // owner so the owner sees it in their activity log.
-    const wsOwner = req.headers['x-workspace-id'];
-    const accountId = wsOwner && wsOwner !== String(actorId) ? wsOwner : actorId;
-    const viaTeam = accountId !== actorId;
+    // owner's workspace, the action is recorded under the owner so the owner
+    // sees it in their activity log.
+    //
+    // SECURITY: use the workspace owner resolved by resolveWorkspace (which
+    // verifies accepted membership) — NEVER the raw X-Workspace-Id header.
+    // Trusting the header here let any user inject forged entries into an
+    // arbitrary victim's activity log via routes without workspace resolution
+    // (e.g. /auth/login). req.workspaceOwner is absent on those routes, so the
+    // entry correctly falls back to the actor's own account.
+    const wsOwner = req.workspaceOwner;
+    const accountId = wsOwner && String(wsOwner) !== String(actorId) ? wsOwner : actorId;
+    const viaTeam = String(accountId) !== String(actorId);
 
     // Best identifier for the affected resource.
     const eventData =
