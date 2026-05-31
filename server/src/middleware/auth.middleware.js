@@ -13,7 +13,7 @@ export const authenticate = async (req, res, next) => {
     const decoded = verifyAccessToken(token);
     const user = await User.findById(decoded.id).lean();
     if (!user) throw ApiError.unauthorized();
-    req.user = { id: user._id, email: user.email, username: user.username };
+    req.user = { id: user._id, email: user.email, username: user.username, name: user.name };
     next();
   } catch (err) {
     next(err.isOperational ? err : ApiError.unauthorized());
@@ -26,7 +26,7 @@ export const optionalAuth = async (req, res, next) => {
     if (token) {
       const decoded = verifyAccessToken(token);
       const user = await User.findById(decoded.id).lean();
-      if (user) req.user = { id: user._id, email: user.email, username: user.username };
+      if (user) req.user = { id: user._id, email: user.email, username: user.username, name: user.name };
     }
   } catch { /* continue as unauthenticated */ }
   next();

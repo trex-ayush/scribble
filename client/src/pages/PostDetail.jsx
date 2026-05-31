@@ -7,6 +7,7 @@ import { Button } from '../components/ui/Button.jsx';
 import { Textarea } from '../components/ui/Input.jsx';
 import { PostContent } from '../components/post/PostContent.jsx';
 import { useFeedback } from '../components/feedback/FeedbackProvider.jsx';
+import { workspaceStore } from '../store/workspaceStore.js';
 
 const Spinner = () => (
   <div className="flex justify-center py-20">
@@ -106,7 +107,14 @@ export const PostDetail = () => {
   if (loading) return <Spinner />;
   if (!post) return null;
 
-  const isAuthor = user?.username === post.author?.username;
+  // Author = you, OR you're acting in a workspace whose owner authored this
+  // post and your role is "full" (read-only members can't edit/delete).
+  const activeWs = workspaceStore.getState().active;
+  const ownsPost = user?.username === post.author?.username;
+  const inOwnerWs = activeWs && activeWs.username === post.author?.username;
+  const canEdit = ownsPost || (inOwnerWs && activeWs.role === 'full');
+  const canDelete = canEdit;
+  const isAuthor = canEdit;
 
   return (
     <article className="max-w-3xl mx-auto space-y-10">
