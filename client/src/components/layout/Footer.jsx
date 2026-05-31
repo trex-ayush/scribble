@@ -21,7 +21,7 @@ const ColHeading = ({ children }) => (
 
 export const Footer = () => (
   <footer className="border-t-[3px] border-dashed border-pencil bg-paper mt-16">
-    <div className="max-w-5xl mx-auto px-6 py-12 grid gap-10 md:grid-cols-3">
+    <div className="max-w-7xl mx-auto px-6 py-12 grid gap-10 md:grid-cols-3">
       {/* Brand */}
       <div className="space-y-3">
         <Link to="/" className="flex items-center gap-2 group w-fit">
@@ -77,7 +77,7 @@ export const Footer = () => (
     </div>
 
     <div className="border-t-2 border-dashed border-pencil/40">
-      <div className="max-w-5xl mx-auto px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div className="max-w-7xl mx-auto px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-2">
         <p className="font-body text-sm text-pencil/60">
           © {2026} Scribble. All scribbles reserved.
         </p>
