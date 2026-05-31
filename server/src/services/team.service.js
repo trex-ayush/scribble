@@ -2,6 +2,7 @@ import { TeamMember } from '../models/teamMember.model.js';
 import { User } from '../models/user.model.js';
 import { ActivityLog } from '../models/activityLog.model.js';
 import { ApiError } from '../utils/ApiError.js';
+import { notificationService } from './notification.service.js';
 
 // What each role can do on the owner's posts.
 const ROLE_PERMISSIONS = {
@@ -45,6 +46,14 @@ export const teamService = {
       role,
       status: 'accepted',
     });
+
+    // Let the added member know they now have access to this workspace.
+    await notificationService.notify({
+      recipient: target._id,
+      actor: ownerId,
+      type: 'team_add',
+    });
+
     return TeamMember.findById(membership._id)
       .populate('member', 'username name email')
       .lean();

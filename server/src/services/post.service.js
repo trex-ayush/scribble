@@ -1,5 +1,6 @@
 import { Post } from '../models/post.model.js';
 import { ApiError } from '../utils/ApiError.js';
+import { notificationService } from './notification.service.js';
 
 const POSTS_PER_PAGE = 10;
 const ALLOWED_PER_PAGE = [10, 15, 20, 30, 50, 100];
@@ -95,6 +96,17 @@ export const postService = {
       { [op]: { claps: userId } },
       { new: true }
     );
+
+    // Notify the author when their story gets a clap (not on un-clap).
+    if (!hasClapped) {
+      await notificationService.notify({
+        recipient: post.author,
+        actor: userId,
+        type: 'clap',
+        post: post._id,
+      });
+    }
+
     return { clapped: !hasClapped, clapCount: updated.claps.length };
   },
 
