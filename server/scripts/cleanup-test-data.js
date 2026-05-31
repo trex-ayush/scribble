@@ -11,9 +11,10 @@ import { User } from '../src/models/user.model.js';
 import { Post } from '../src/models/post.model.js';
 import { Comment } from '../src/models/comment.model.js';
 import { ActivityLog } from '../src/models/activityLog.model.js';
+import { TeamMember } from '../src/models/teamMember.model.js';
 
-const TEST_USERNAMES = ['logintest', 'actlogtest', 'deltest', 'pgtest', 'apidemo', 'apidemo2', 'apiverify', 'origintest', 'newapitest'];
-const TEST_TITLES = ['Activity test post', 'Second activity test', 'Panel test post', 'Delete me test', 'Posted via public API', 'Web origin post', 'API origin post', 'Getting Started with MERN Stack', 'Getting Started with MERN Stack — Complete Guide', 'Why Tailwind CSS is a Game Changer', 'My Draft Post via API', 'Understanding JWT Authentication', 'New URL test'];
+const TEST_USERNAMES = ['logintest', 'actlogtest', 'deltest', 'pgtest', 'apidemo', 'apidemo2', 'apiverify', 'origintest', 'newapitest', 'teamowner', 'teammember', 'wsowner', 'wsmember', 'wsowner2', 'wsmember2', 'wsowner3', 'wsmember3', 'taowner', 'tamember', 'flowowner', 'flowmember', 'attowner', 'attmember', 'logowner', 'logmember', 'logowner2', 'logmember2', 'chkowner', 'chkmember', 'r2owner', 'r2member', 'r2c', 'f2owner', 'f2member', 'zowner', 'zmember', 'qowner', 'qmember'];
+const TEST_TITLES = ['Activity test post', 'Second activity test', 'Panel test post', 'Delete me test', 'Posted via public API', 'Web origin post', 'API origin post', 'Getting Started with MERN Stack', 'Getting Started with MERN Stack — Complete Guide', 'Why Tailwind CSS is a Game Changer', 'My Draft Post via API', 'Understanding JWT Authentication', 'New URL test', 'Draft by editor', 'My own', 'My own post', 'Direct access post', 'Attribution test post', 'Flow admin post', 'Check log post'];
 
 const run = async () => {
   await connectDB();
@@ -33,6 +34,7 @@ const run = async () => {
     comments: (await Comment.deleteMany({ post: { $in: allPostIds } })).deletedCount,
     posts: (await Post.deleteMany({ _id: { $in: allPostIds } })).deletedCount,
     activity: (await ActivityLog.deleteMany({ actor: { $in: userIds } })).deletedCount,
+    team: (await TeamMember.deleteMany({ $or: [{ owner: { $in: userIds } }, { member: { $in: userIds } }] })).deletedCount,
     users: (await User.deleteMany({ _id: { $in: userIds } })).deletedCount,
   };
 

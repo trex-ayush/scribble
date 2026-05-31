@@ -9,16 +9,18 @@ export const commentController = {
   }),
 
   addComment: asyncHandler(async (req, res) => {
+    // Authored by the active account (owner when a full member is impersonating).
     const comment = await commentService.addComment(
       req.params.slug,
-      req.user.id,
+      req.workspaceOwner || req.user.id,
       req.body.content
     );
     ApiResponse.created(res, { comment }, 'Comment added');
   }),
 
   deleteComment: asyncHandler(async (req, res) => {
-    await commentService.deleteComment(req.params.id, req.user.id);
+    // Active account drives the author/post-owner permission check.
+    await commentService.deleteComment(req.params.id, req.workspaceOwner || req.user.id);
     ApiResponse.noContent(res);
   }),
 };

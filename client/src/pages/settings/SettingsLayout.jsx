@@ -1,15 +1,22 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { User, KeyRound, BookOpen, Activity } from 'lucide-react';
+import { User, KeyRound, BookOpen, Activity, Users } from 'lucide-react';
+import { workspaceStore } from '../../store/workspaceStore.js';
 
 const NAV = [
   { to: '/settings', end: true, icon: User, label: 'Profile' },
-  { to: '/settings/api', icon: KeyRound, label: 'API Settings' },
+  // Team Members & API Settings belong to the owner — hidden while impersonating.
+  { to: '/settings/team', icon: Users, label: 'Team Members', ownerOnly: true },
+  { to: '/settings/api', icon: KeyRound, label: 'API Settings', ownerOnly: true },
   { to: '/settings/api-docs', icon: BookOpen, label: 'API Docs' },
   { to: '/settings/activity', icon: Activity, label: 'Activity Log' },
 ];
 
-export const SettingsLayout = () => (
+export const SettingsLayout = () => {
+  const active = workspaceStore((s) => s.active);
+  const nav = NAV.filter((item) => !(item.ownerOnly && active));
+
+  return (
   <div className="space-y-6">
     <h1 className="font-heading text-3xl text-pencil">Settings</h1>
 
@@ -19,7 +26,7 @@ export const SettingsLayout = () => (
         className="h-fit bg-white border-2 border-pencil shadow-hard p-2 space-y-1"
         style={{ borderRadius: '15px 255px 15px 225px / 225px 15px 255px 15px' }}
       >
-        {NAV.map(({ to, end, icon: Icon, label }) => (
+        {nav.map(({ to, end, icon: Icon, label }) => (
           <NavLink
             key={to}
             to={to}
@@ -43,4 +50,5 @@ export const SettingsLayout = () => (
       </div>
     </div>
   </div>
-);
+  );
+};

@@ -12,13 +12,17 @@ export const activityService = {
   async getLogs(userId, { page = 1, limit } = {}) {
     const perPage = resolveLimit(limit);
     const skip = (page - 1) * perPage;
+    // Show everything that happened in this account — including actions
+    // performed by team members. Falls back to actor for legacy logs that
+    // predate the `account` field.
+    const filter = { $or: [{ account: userId }, { account: { $exists: false }, actor: userId }] };
     const [logs, total] = await Promise.all([
-      ActivityLog.find({ actor: userId })
+      ActivityLog.find(filter)
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(perPage)
         .lean(),
-      ActivityLog.countDocuments({ actor: userId }),
+      ActivityLog.countDocuments(filter),
     ]);
     return { logs, total, page, perPage, pages: Math.ceil(total / perPage) };
   },

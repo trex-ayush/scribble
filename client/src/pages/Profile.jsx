@@ -6,6 +6,7 @@ import { PostCard } from '../components/post/PostCard.jsx';
 import { FollowListModal } from '../components/user/FollowListModal.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { useAuth } from '../hooks/useAuth.js';
+import { workspaceStore } from '../store/workspaceStore.js';
 
 const Spinner = () => (
   <div className="flex justify-center py-20">
@@ -17,6 +18,7 @@ export const Profile = () => {
   const { username } = useParams();
   const cleanUsername = username?.replace('@', '') || '';
   const { user: currentUser, isAuthenticated } = useAuth();
+  const active = workspaceStore((s) => s.active);
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -65,7 +67,9 @@ export const Profile = () => {
     </div>
   );
 
-  const isOwnProfile = currentUser?.username === cleanUsername;
+  // While impersonating, "own profile" means the workspace owner we're acting as.
+  const effectiveUsername = active ? active.username : currentUser?.username;
+  const isOwnProfile = effectiveUsername === cleanUsername;
 
   return (
     <div className="space-y-10">
