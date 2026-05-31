@@ -117,7 +117,7 @@ export const PostDetail = () => {
   const isAuthor = canEdit;
 
   return (
-    <article className="max-w-3xl mx-auto space-y-10">
+    <article className="max-w-4xl mx-auto space-y-10">
       <header className="space-y-4">
         <div className="flex items-start justify-between gap-4">
           <h1 className="font-heading text-4xl md:text-5xl text-pencil leading-tight">
