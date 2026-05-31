@@ -47,11 +47,13 @@ export const NotificationBell = () => {
   const { items, unread, loading, fetchUnreadCount, fetchList, markRead, markAllRead } =
     notificationStore();
 
-  // Poll the unread count while mounted (only rendered when authenticated).
+  // Event-driven (no polling): fetch the unread count on mount and whenever the
+  // tab regains focus. Opening the dropdown also refreshes it via fetchList.
   useEffect(() => {
     fetchUnreadCount();
-    const id = setInterval(fetchUnreadCount, 60_000);
-    return () => clearInterval(id);
+    const onFocus = () => fetchUnreadCount();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
   }, [fetchUnreadCount]);
 
   // Close on outside click.
