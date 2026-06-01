@@ -111,8 +111,15 @@ export const ActivityLog = () => {
               </span>
               <span className="min-w-0">
                 <span className="block text-pencil/80">{log.source}</span>
-                <span className="text-[10px] font-body text-pencil/50">
-                  {log.origin || 'USER'}
+                <span
+                  className={[
+                    'inline-block px-1.5 text-[10px] font-body border rounded',
+                    log.origin === 'API'
+                      ? 'bg-ink/10 text-ink border-ink/40'
+                      : 'bg-muted text-pencil/60 border-pencil/30',
+                  ].join(' ')}
+                >
+                  {log.origin === 'API' ? 'API' : 'App'}
                 </span>
               </span>
               <span><ActionBadge action={log.action} /></span>

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { postController } from '../controllers/post.controller.js';
 import { basicAuth } from '../middleware/basicAuth.middleware.js';
+import { activityLogger } from '../middleware/activityLog.middleware.js';
 import { validate } from '../middleware/validate.middleware.js';
 import { createPostValidator, updatePostValidator } from '../validators/post.validator.js';
 
@@ -13,9 +14,15 @@ import { createPostValidator, updatePostValidator } from '../validators/post.val
  */
 const router = Router();
 
-router.post('/posts', basicAuth, validate(createPostValidator), postController.createPost);
-router.put('/posts/:id', basicAuth, validate(updatePostValidator), postController.updatePost);
-router.delete('/posts/:id', basicAuth, postController.deletePost);
-router.post('/posts/:id/clap', basicAuth, postController.toggleClap);
+// One gate for the whole public API. basicAuth authenticates (and calls
+// next('router') when there's no Basic Auth header, so JWT web requests fall
+// through to the web router — logged there once). activityLogger then records
+// each API write with origin: 'API'. Both run once instead of per route.
+router.use(basicAuth, activityLogger);
+
+router.post('/posts', validate(createPostValidator), postController.createPost);
+router.put('/posts/:id', validate(updatePostValidator), postController.updatePost);
+router.delete('/posts/:id', postController.deletePost);
+router.post('/posts/:id/clap', postController.toggleClap);
 
 export default router;
