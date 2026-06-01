@@ -5,6 +5,34 @@ import { gfm } from 'turndown-plugin-gfm';
 
 marked.setOptions({ gfm: true, breaks: true });
 
+// marked v12 dropped automatic heading ids; re-add GitHub-style slugs so in-page
+// anchor links (a table of contents / "Index") have a target to scroll to.
+const slugifyHeading = (text) =>
+  text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '') // drop punctuation (em/en dashes, &, etc.) — keep word chars, spaces, hyphens
+    .replace(/\s/g, '-'); // each space -> hyphen (repeats kept, e.g. "a — b" -> "a--b")
+
+// Add ids to headings that lack them, deduping like GitHub (foo, foo-1, foo-2).
+const addHeadingIds = (html) => {
+  if (!html || typeof DOMParser === 'undefined') return html;
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const seen = Object.create(null);
+  doc.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach((h) => {
+    if (h.id) return;
+    const base = slugifyHeading(h.textContent || '');
+    if (!base) return;
+    if (base in seen) {
+      seen[base] += 1;
+      h.id = `${base}-${seen[base]}`;
+    } else {
+      seen[base] = 0;
+      h.id = base;
+    }
+  });
+  return doc.body.innerHTML;
+};
+
 // Single shared HTML -> Markdown converter (GFM: tables, strikethrough, etc.)
 const turndown = new TurndownService({
   headingStyle: 'atx',
@@ -28,7 +56,7 @@ export const htmlToMarkdown = (html) => {
  * Convert stored post content into safe HTML for rendering.
  * - 'markdown' content is parsed to HTML via marked.
  * - 'html' content (from the rich-text editor) is used as-is.
- * Both are then sanitized with DOMPurify before they reach the DOM.
+ * Both are then sanitized with DOMPurify, then headings get anchor ids.
  *
  * @param {string} content raw stored content
  * @param {'html'|'markdown'} [format='html']
@@ -37,7 +65,7 @@ export const htmlToMarkdown = (html) => {
 export const renderContent = (content, format = 'html') => {
   if (!content) return '';
   const html = format === 'markdown' ? marked.parse(content) : content;
-  return DOMPurify.sanitize(html);
+  return addHeadingIds(DOMPurify.sanitize(html));
 };
 
 /**
@@ -49,6 +77,8 @@ export const PROSE_CLASS =
   '[&_h1]:font-heading [&_h1]:text-3xl [&_h1]:mt-8 [&_h1]:mb-3 ' +
   '[&_h2]:font-heading [&_h2]:text-2xl [&_h2]:mt-8 [&_h2]:mb-3 ' +
   '[&_h3]:font-heading [&_h3]:text-xl [&_h3]:mt-6 [&_h3]:mb-2 ' +
+  // Offset for the sticky top bar so anchored headings aren't hidden under it.
+  '[&_h1]:scroll-mt-24 [&_h2]:scroll-mt-24 [&_h3]:scroll-mt-24 [&_h4]:scroll-mt-24 [&_h5]:scroll-mt-24 [&_h6]:scroll-mt-24 ' +
   '[&_a]:text-ink [&_a]:underline ' +
   '[&_blockquote]:border-l-4 [&_blockquote]:border-pencil [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-pencil/70 ' +
   '[&_pre]:bg-pencil [&_pre]:text-paper [&_pre]:p-4 [&_pre]:rounded [&_pre]:overflow-x-auto ' +

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Clock, Tag, Heart, Trash2, Send, Pencil, Eye, BookOpen } from 'lucide-react';
+import { Clock, Tag, Heart, Trash2, Send, Pencil, Eye, BookOpen, ArrowUp, Share2 } from 'lucide-react';
 import { postsApi } from '../api/posts.js';
 import { useAuth } from '../hooks/useAuth.js';
 import { Button } from '../components/ui/Button.jsx';
@@ -27,6 +27,7 @@ export const PostDetail = () => {
   const [commentText, setCommentText] = useState('');
   const [loading, setLoading] = useState(true);
   const [clapState, setClapState] = useState({ clapped: false, count: 0 });
+  const [showTop, setShowTop] = useState(false);
   const endRef = useRef(null);
   const readFiredRef = useRef(false);
 
@@ -71,6 +72,33 @@ export const PostDetail = () => {
     obs.observe(endRef.current);
     return () => obs.disconnect();
   }, [post, user]);
+
+  // Reveal a "back to top" button once the reader has scrolled down.
+  useEffect(() => {
+    const onScroll = () => setShowTop(window.scrollY > 600);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    // Always copy the link...
+    try {
+      await navigator.clipboard?.writeText(url);
+      toast.success('Link copied', 'Share it anywhere.');
+    } catch {
+      toast.error('Could not copy link');
+    }
+    // ...and offer the native share sheet where available (mobile).
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: post.title, url });
+      } catch {
+        /* user cancelled */
+      }
+    }
+  };
 
   const handleClap = async () => {
     if (!isAuthenticated) return navigate('/login');
@@ -148,6 +176,15 @@ export const PostDetail = () => {
           </h1>
           <div className="flex items-center gap-2 shrink-0">
             <BookmarkButton postId={post._id} variant="full" />
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={handleShare}
+              className="flex items-center gap-1.5"
+            >
+              <Share2 size={14} strokeWidth={2.5} />
+              <span className="hidden sm:inline">Share</span>
+            </Button>
             {isAuthor && (
               <>
                 <Button
@@ -223,7 +260,12 @@ export const PostDetail = () => {
         )}
       </header>
 
-      <PostContent content={post.content} format={post.format} />
+      <PostContent
+        content={post.content}
+        format={post.format}
+        headingLinks
+        onCopyHeading={() => toast.success('Section link copied')}
+      />
       <div ref={endRef} aria-hidden="true" />
 
       <div className="flex items-center gap-4 border-y-2 border-dashed border-pencil py-6">
@@ -298,6 +340,22 @@ export const PostDetail = () => {
           ))}
         </div>
       </section>
+
+      <div
+        className={[
+          'fixed bottom-20 md:bottom-6 right-6 z-40 transition-all duration-300 ease-out',
+          showTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none',
+        ].join(' ')}
+      >
+        <button
+          type="button"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          aria-label="Back to top"
+          className="btn btn-primary flex items-center justify-center w-12 h-12"
+        >
+          <ArrowUp size={20} strokeWidth={2.5} />
+        </button>
+      </div>
     </article>
   );
 };
