@@ -41,7 +41,7 @@ export const BookmarkButton = ({ postId, variant = 'icon', className = '' }) => 
         ].join(' ')}
       >
         <Bookmark size={16} strokeWidth={2.5} fill={saved ? 'currentColor' : 'none'} />
-        {label}
+        <span className="hidden sm:inline">{label}</span>
       </button>
     );
   }

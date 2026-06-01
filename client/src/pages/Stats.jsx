@@ -66,7 +66,7 @@ export const Stats = () => {
         </Card>
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
             <StatCard
               icon={Eye}
               label="Unique views"
@@ -126,12 +126,22 @@ export const Stats = () => {
                   </Link>
                 </Tooltip>
                 <span className="text-pencil/80">
+                  <span className="md:hidden text-pencil/50 mr-1">Views</span>
                   {p.uniqueViews}
                   <span className="text-pencil/40"> / {p.views}</span>
                 </span>
-                <span className="text-pencil/80">{p.reads}</span>
-                <span className="text-pencil/80">{p.claps}</span>
-                <span className="text-pencil/80">{ratio(p.reads, p.uniqueViews)}%</span>
+                <span className="text-pencil/80">
+                  <span className="md:hidden text-pencil/50 mr-1">Reads</span>
+                  {p.reads}
+                </span>
+                <span className="text-pencil/80">
+                  <span className="md:hidden text-pencil/50 mr-1">Claps</span>
+                  {p.claps}
+                </span>
+                <span className="text-pencil/80">
+                  <span className="md:hidden text-pencil/50 mr-1">Read ratio</span>
+                  {ratio(p.reads, p.uniqueViews)}%
+                </span>
               </div>
             ))}
           </div>

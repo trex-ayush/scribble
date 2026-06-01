@@ -170,11 +170,11 @@ export const PostDetail = () => {
   return (
     <article className="space-y-10">
       <header className="space-y-4">
-        <div className="flex items-start justify-between gap-4">
-          <h1 className="font-heading text-4xl md:text-5xl text-pencil leading-tight">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+          <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl text-pencil leading-tight break-words">
             {post.title}
           </h1>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
             <BookmarkButton postId={post._id} variant="full" />
             <Button
               size="sm"

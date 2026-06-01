@@ -51,7 +51,7 @@ const SearchBar = ({ className = '' }) => {
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
-          className="flex items-center gap-1 h-full px-3 py-2 bg-muted border-2 border-r-0 border-pencil
+          className="flex items-center gap-1 h-full px-2 sm:px-3 py-2 bg-muted border-2 border-r-0 border-pencil
                      font-body text-sm text-pencil hover:bg-muted/70 transition-colors"
           style={{ borderRadius: '12px 0 0 12px' }}
         >
@@ -205,7 +205,7 @@ export const Navbar = () => {
 
         <SearchBar className="flex-1 max-w-md mx-auto" />
 
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-1 sm:gap-3 shrink-0">
           {isAuthenticated ? (
             <>
               <NotificationBell />

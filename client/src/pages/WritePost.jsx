@@ -152,7 +152,7 @@ export const WritePost = () => {
 
       <TagInput tags={tags} onChange={setTags} />
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <span className="font-body text-sm text-pencil/60">Editor:</span>
         {FORMATS.map(({ key, label, icon: Icon }) => (
           <button

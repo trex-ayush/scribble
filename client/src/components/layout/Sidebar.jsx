@@ -24,7 +24,7 @@ const railClass = ({ isActive }) =>
 
 const tabClass = ({ isActive }) =>
   [
-    'relative flex flex-1 flex-col items-center justify-center gap-0.5 py-2 font-body text-[10px] transition-colors duration-100',
+    'relative flex flex-1 min-w-0 flex-col items-center justify-center gap-0.5 px-0.5 py-2 font-body text-[10px] leading-tight transition-colors duration-100',
     isActive ? 'text-accent' : 'text-pencil/60',
   ].join(' ');
 
@@ -32,7 +32,7 @@ const tabClass = ({ isActive }) =>
 // (accent red) backgrounds; on-palette paper text.
 const Badge = ({ count }) =>
   count > 0 ? (
-    <span className="absolute -top-1.5 -right-2.5 flex items-center justify-center min-w-[16px] h-4 px-1 text-[10px] bg-pencil text-paper border-2 border-paper rounded-full">
+    <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[16px] h-4 px-1 text-[10px] bg-pencil text-paper border-2 border-paper rounded-full">
       {count}
     </span>
   ) : null;
@@ -74,14 +74,14 @@ export const Sidebar = () => {
       </aside>
 
       {/* Mobile: fixed bottom tab bar */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 flex items-stretch bg-paper border-t-[3px] border-pencil">
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 flex items-stretch bg-paper border-t-[3px] border-pencil pb-[env(safe-area-inset-bottom)]">
         {NAV.map(({ to, label, icon: Icon, end, badge }) => (
           <NavLink key={to} to={to} end={end} className={tabClass}>
             <span className="relative">
               <Icon size={20} strokeWidth={2.5} />
               {badge && <Badge count={draftCount} />}
             </span>
-            {label}
+            <span className="max-w-full truncate">{label}</span>
           </NavLink>
         ))}
       </nav>

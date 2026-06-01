@@ -73,16 +73,16 @@ export const renderContent = (content, format = 'html') => {
  * Tailwind arbitrary-variant selectors mirror the hand-drawn design system.
  */
 export const PROSE_CLASS =
-  'font-body text-pencil leading-relaxed space-y-4 ' +
+  'font-body text-pencil leading-relaxed space-y-4 max-w-full min-w-0 break-words [overflow-wrap:anywhere] ' +
   '[&_h1]:font-heading [&_h1]:text-3xl [&_h1]:mt-8 [&_h1]:mb-3 ' +
   '[&_h2]:font-heading [&_h2]:text-2xl [&_h2]:mt-8 [&_h2]:mb-3 ' +
   '[&_h3]:font-heading [&_h3]:text-xl [&_h3]:mt-6 [&_h3]:mb-2 ' +
   // Offset for the sticky top bar so anchored headings aren't hidden under it.
   '[&_h1]:scroll-mt-24 [&_h2]:scroll-mt-24 [&_h3]:scroll-mt-24 [&_h4]:scroll-mt-24 [&_h5]:scroll-mt-24 [&_h6]:scroll-mt-24 ' +
-  '[&_a]:text-ink [&_a]:underline ' +
+  '[&_a]:text-ink [&_a]:underline [&_a]:break-words ' +
   '[&_blockquote]:border-l-4 [&_blockquote]:border-pencil [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-pencil/70 ' +
-  '[&_pre]:bg-pencil [&_pre]:text-paper [&_pre]:p-4 [&_pre]:rounded [&_pre]:overflow-x-auto ' +
-  '[&_code]:bg-muted [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:font-mono [&_code]:text-sm ' +
+  '[&_pre]:bg-pencil [&_pre]:text-paper [&_pre]:p-4 [&_pre]:rounded [&_pre]:overflow-x-auto [&_pre]:max-w-full ' +
+  '[&_code]:bg-muted [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:font-mono [&_code]:text-sm [&_code]:break-words ' +
   '[&_pre_code]:bg-transparent [&_pre_code]:p-0 ' +
   '[&_ul]:list-disc [&_ul]:list-inside [&_ol]:list-decimal [&_ol]:list-inside ' +
   '[&_table]:w-full [&_table]:border-collapse [&_th]:border-2 [&_th]:border-pencil [&_th]:p-2 [&_td]:border [&_td]:border-pencil [&_td]:p-2 ' +

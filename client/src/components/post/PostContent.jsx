@@ -79,6 +79,18 @@ export const PostContent = ({ content, format = 'html', className = '', headingL
     });
   }, [html, headingLinks]);
 
+  // Wrap wide tables so they scroll inside the column instead of widening the page.
+  useEffect(() => {
+    if (!ref.current) return;
+    ref.current.querySelectorAll('table').forEach((t) => {
+      if (t.parentElement?.classList.contains('table-scroll')) return;
+      const wrap = document.createElement('div');
+      wrap.className = 'table-scroll overflow-x-auto max-w-full';
+      t.parentNode.insertBefore(wrap, t);
+      wrap.appendChild(t);
+    });
+  }, [html]);
+
   // Deep link: if the page opens with a hash, smooth-scroll to the heading once
   // content is rendered (small delay lets layout settle for a clean animation).
   useEffect(() => {

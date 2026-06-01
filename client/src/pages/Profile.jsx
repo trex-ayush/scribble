@@ -74,7 +74,7 @@ export const Profile = () => {
   return (
     <div className="space-y-10">
       <section
-        className="bg-white border-2 border-pencil shadow-hard p-8 space-y-4 wobbly"
+        className="bg-white border-2 border-pencil shadow-hard p-5 sm:p-8 space-y-4 wobbly"
       >
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
@@ -111,7 +111,7 @@ export const Profile = () => {
           <p className="font-body text-pencil/80 max-w-lg leading-relaxed">{profile.bio}</p>
         )}
 
-        <div className="flex gap-6 font-body text-sm text-pencil/60 pt-2 border-t-2 border-dashed border-muted">
+        <div className="flex flex-wrap gap-x-6 gap-y-2 font-body text-sm text-pencil/60 pt-2 border-t-2 border-dashed border-muted">
           <button
             onClick={() => setModal('followers')}
             className="hover:text-accent transition-colors"
