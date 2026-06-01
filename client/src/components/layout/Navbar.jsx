@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { PenLine, User, LogOut, FileText, Search, ChevronDown, Users, Settings, Bookmark } from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { PenLine, User, LogOut, FileText, Search, ChevronDown, Users } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth.js';
-import { postsApi } from '../../api/posts.js';
 import { Button } from '../ui/Button.jsx';
 import { workspaceStore } from '../../store/workspaceStore.js';
 import { notificationStore } from '../../store/notificationStore.js';
@@ -155,17 +154,6 @@ const UserMenu = ({ user, onLogout }) => {
             </Link>
           </li>
 
-          <li>
-            <Link
-              to="/settings"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-2 px-4 py-2.5 font-body text-sm text-pencil hover:bg-muted transition-colors"
-            >
-              <Settings size={15} strokeWidth={2.5} />
-              Settings
-            </Link>
-          </li>
-
           <li className="border-t-2 border-dashed border-pencil/30">
             {active ? (
               <button
@@ -194,20 +182,6 @@ const UserMenu = ({ user, onLogout }) => {
 export const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  const [draftCount, setDraftCount] = useState(0);
-
-  // Refresh draft count on auth change and route change.
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setDraftCount(0);
-      return;
-    }
-    postsApi
-      .getMyDrafts()
-      .then(({ data }) => setDraftCount(data.data.posts.length))
-      .catch(() => {});
-  }, [isAuthenticated, location.pathname]);
 
   const handleLogout = async () => {
     workspaceStore.getState().reset();
@@ -219,7 +193,7 @@ export const Navbar = () => {
 
   return (
     <header className="sticky top-0 z-50 bg-paper/95 backdrop-blur-sm border-b-[3px] border-pencil">
-      <nav className="max-w-7xl mx-auto px-6 py-4 flex items-center gap-4">
+      <nav className="w-full px-3 sm:px-6 h-[72px] flex items-center gap-2 sm:gap-4">
         <Link to="/" className="flex items-center gap-2 group shrink-0">
           <PenLine
             size={28}
@@ -234,33 +208,6 @@ export const Navbar = () => {
         <div className="flex items-center gap-3 shrink-0">
           {isAuthenticated ? (
             <>
-              <Link to="/write">
-                <Button size="sm" className="flex items-center gap-2">
-                  <PenLine size={16} strokeWidth={2.5} />
-                  <span className="hidden md:inline">Write</span>
-                </Button>
-              </Link>
-              <Link
-                to="/drafts"
-                className="relative flex items-center gap-2 px-3 py-2 font-body text-pencil hover:bg-muted rounded transition-colors"
-                aria-label={`Drafts (${draftCount})`}
-              >
-                <FileText size={18} strokeWidth={2.5} />
-                <span className="hidden md:inline">Drafts</span>
-                {draftCount > 0 && (
-                  <span className="flex items-center justify-center min-w-[20px] h-5 px-1 text-xs font-body bg-accent text-white border-2 border-pencil rounded-full">
-                    {draftCount}
-                  </span>
-                )}
-              </Link>
-              <Link
-                to="/bookmarks"
-                className="flex items-center gap-2 px-3 py-2 font-body text-pencil hover:bg-muted rounded transition-colors"
-                aria-label="Reading list"
-              >
-                <Bookmark size={18} strokeWidth={2.5} />
-                <span className="hidden md:inline">Saved</span>
-              </Link>
               <NotificationBell />
               <UserMenu user={user} onLogout={handleLogout} />
             </>

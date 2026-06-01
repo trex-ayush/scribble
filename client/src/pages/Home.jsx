@@ -94,7 +94,7 @@ export const Home = () => {
   const showHero = !isAuthenticated && !activeSearch && !activeTag;
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-6">
       {showHero && (
         <section className="text-center py-16 space-y-6">
           <h1 className="font-heading text-5xl md:text-7xl text-pencil leading-tight">
