@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth.js';
 import { Button } from '../components/ui/Button.jsx';
 import { Textarea } from '../components/ui/Input.jsx';
 import { PostContent } from '../components/post/PostContent.jsx';
+import { BookmarkButton } from '../components/post/BookmarkButton.jsx';
 import { useFeedback } from '../components/feedback/FeedbackProvider.jsx';
 import { workspaceStore } from '../store/workspaceStore.js';
 
@@ -117,34 +118,37 @@ export const PostDetail = () => {
   const isAuthor = canEdit;
 
   return (
-    <article className="max-w-4xl mx-auto space-y-10">
+    <article className="space-y-10">
       <header className="space-y-4">
         <div className="flex items-start justify-between gap-4">
           <h1 className="font-heading text-4xl md:text-5xl text-pencil leading-tight">
             {post.title}
           </h1>
-          {isAuthor && (
-            <div className="flex gap-2 shrink-0">
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => navigate(`/write/${post._id}`)}
-                className="flex items-center gap-1.5"
-              >
-                <Pencil size={14} strokeWidth={2.5} />
-                <span className="hidden sm:inline">Edit</span>
-              </Button>
-              <Button
-                size="sm"
-                variant="danger"
-                onClick={handleDeletePost}
-                className="flex items-center gap-1.5"
-              >
-                <Trash2 size={14} strokeWidth={2.5} />
-                <span className="hidden sm:inline">Delete</span>
-              </Button>
-            </div>
-          )}
+          <div className="flex items-center gap-2 shrink-0">
+            <BookmarkButton postId={post._id} variant="full" />
+            {isAuthor && (
+              <>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => navigate(`/write/${post._id}`)}
+                  className="flex items-center gap-1.5"
+                >
+                  <Pencil size={14} strokeWidth={2.5} />
+                  <span className="hidden sm:inline">Edit</span>
+                </Button>
+                <Button
+                  size="sm"
+                  variant="danger"
+                  onClick={handleDeletePost}
+                  className="flex items-center gap-1.5"
+                >
+                  <Trash2 size={14} strokeWidth={2.5} />
+                  <span className="hidden sm:inline">Delete</span>
+                </Button>
+              </>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-4 font-body text-pencil/60 text-sm border-b-2 border-dashed border-pencil pb-4">
