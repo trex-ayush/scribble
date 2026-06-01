@@ -36,7 +36,7 @@ export const bookmarkService = {
         .limit(perPage)
         .populate({
           path: 'post',
-          select: '-content',
+          select: '-content -views -uniqueViews -reads -__v',
           populate: { path: 'author', select: 'username name' },
         })
         .lean(),

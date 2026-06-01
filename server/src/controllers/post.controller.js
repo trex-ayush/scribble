@@ -5,6 +5,7 @@ import { Post } from '../models/post.model.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import { resolveVisitor } from '../utils/visitor.js';
 
 // Resolve the effective author for a post action performed by a team member.
 // Returns the post if the requester has the required permission.
@@ -27,8 +28,20 @@ export const postController = {
   }),
 
   getPost: asyncHandler(async (req, res) => {
-    const post = await postService.getPost(req.params.slug);
+    const visitorKey = resolveVisitor(req, res);
+    const post = await postService.getPost(req.params.slug, { viewerId: req.user?.id, visitorKey });
     ApiResponse.success(res, { post });
+  }),
+
+  recordRead: asyncHandler(async (req, res) => {
+    const visitorKey = resolveVisitor(req, res);
+    await postService.recordRead(req.params.id, { viewerId: req.user?.id, visitorKey });
+    ApiResponse.noContent(res);
+  }),
+
+  getAnalytics: asyncHandler(async (req, res) => {
+    const result = await postService.getAnalytics(req.workspaceOwner || req.user.id);
+    ApiResponse.success(res, result);
   }),
 
   getMyDrafts: asyncHandler(async (req, res) => {

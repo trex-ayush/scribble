@@ -50,6 +50,7 @@ export const userService = {
     const filter = { author: user._id, ...(!isOwner && { status: 'published' }) };
     return Post.find(filter)
       .populate('author', 'username name')
+      .select('-views -uniqueViews -reads -__v')
       .sort({ createdAt: -1 })
       .lean();
   },

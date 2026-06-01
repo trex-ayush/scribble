@@ -56,6 +56,10 @@ const postSchema = new mongoose.Schema(
     },
     claps: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     readingTime: { type: Number, default: 0 },
+    // Denormalized analytics counters, kept in sync on view/read events.
+    views: { type: Number, default: 0 }, // total page loads
+    uniqueViews: { type: Number, default: 0 }, // distinct visitors
+    reads: { type: Number, default: 0 }, // distinct visitors who finished reading
   },
   { timestamps: true }
 );

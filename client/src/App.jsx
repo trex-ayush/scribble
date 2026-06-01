@@ -7,6 +7,7 @@ import { Register } from './pages/Register.jsx';
 import { WritePost } from './pages/WritePost.jsx';
 import { Drafts } from './pages/Drafts.jsx';
 import { Bookmarks } from './pages/Bookmarks.jsx';
+import { Stats } from './pages/Stats.jsx';
 import { PostDetail } from './pages/PostDetail.jsx';
 import { Profile } from './pages/Profile.jsx';
 import { SettingsLayout } from './pages/settings/SettingsLayout.jsx';
@@ -60,6 +61,10 @@ const App = () => {
         <Route
           path="/bookmarks"
           element={<ProtectedRoute><Bookmarks /></ProtectedRoute>}
+        />
+        <Route
+          path="/stats"
+          element={<ProtectedRoute><Stats /></ProtectedRoute>}
         />
         <Route
           path="/settings"

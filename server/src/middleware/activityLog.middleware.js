@@ -12,6 +12,7 @@ const deriveSource = (path) => {
   if (path.startsWith('/team/access')) return null; // logged explicitly as "Team Member Login"
   if (path.startsWith('/notifications')) return null; // reading your own inbox isn't an audit event
   if (path.startsWith('/bookmarks')) return null; // personal reading list, not an audit event
+  if (path.endsWith('/read')) return null; // read-tracking, not an audit event
   if (path.startsWith('/api-keys')) return 'API Key';
   if (path.includes('/comments')) return 'Comment';
   if (path.includes('/clap')) return 'Clap';

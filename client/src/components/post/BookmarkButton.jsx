@@ -31,10 +31,12 @@ export const BookmarkButton = ({ postId, variant = 'icon', className = '' }) => 
         onClick={handle}
         aria-pressed={saved}
         className={[
-          'flex items-center gap-1.5 px-3 py-1.5 border-2 font-body text-sm transition-all duration-100 wobbly-btn',
+          // Shared .btn base = same hover-lift / active-press animation + sizing
+          // as the Edit/Delete buttons (see skill.md design system).
+          'btn btn-sm flex items-center gap-1.5',
           saved
-            ? 'bg-pencil text-paper border-pencil shadow-hard'
-            : 'bg-white text-pencil border-pencil shadow-hard hover:bg-pencil hover:text-paper',
+            ? 'bg-pencil text-paper'
+            : 'bg-white text-pencil hover:bg-pencil hover:text-paper',
           className,
         ].join(' ')}
       >
