@@ -6,6 +6,7 @@ import { Login } from './pages/Login.jsx';
 import { Register } from './pages/Register.jsx';
 import { WritePost } from './pages/WritePost.jsx';
 import { Drafts } from './pages/Drafts.jsx';
+import { Bookmarks } from './pages/Bookmarks.jsx';
 import { PostDetail } from './pages/PostDetail.jsx';
 import { Profile } from './pages/Profile.jsx';
 import { SettingsLayout } from './pages/settings/SettingsLayout.jsx';
@@ -17,6 +18,7 @@ import { ActivityLog } from './pages/ActivityLog.jsx';
 import { NotFound } from './pages/NotFound.jsx';
 import { useAuth } from './hooks/useAuth.js';
 import { workspaceStore } from './store/workspaceStore.js';
+import { bookmarkStore } from './store/bookmarkStore.js';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -27,9 +29,12 @@ const App = () => {
   const { fetchMe } = useAuth();
 
   useEffect(() => {
-    // Load the user, then their team workspaces for the switcher.
+    // Load the user, then their team workspaces + saved bookmarks.
     fetchMe()
-      .then(() => workspaceStore.getState().loadWorkspaces())
+      .then(() => {
+        workspaceStore.getState().loadWorkspaces();
+        bookmarkStore.getState().loadIds();
+      })
       .catch(() => {});
   }, []);
 
@@ -51,6 +56,10 @@ const App = () => {
         <Route
           path="/drafts"
           element={<ProtectedRoute><Drafts /></ProtectedRoute>}
+        />
+        <Route
+          path="/bookmarks"
+          element={<ProtectedRoute><Bookmarks /></ProtectedRoute>}
         />
         <Route
           path="/settings"

@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { PenLine, User, LogOut, FileText, Search, ChevronDown, Users, Settings } from 'lucide-react';
+import { PenLine, User, LogOut, FileText, Search, ChevronDown, Users, Settings, Bookmark } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth.js';
 import { postsApi } from '../../api/posts.js';
 import { Button } from '../ui/Button.jsx';
 import { workspaceStore } from '../../store/workspaceStore.js';
 import { notificationStore } from '../../store/notificationStore.js';
+import { bookmarkStore } from '../../store/bookmarkStore.js';
 import { NotificationBell } from './NotificationBell.jsx';
 
 const SEARCH_TYPES = [
@@ -211,6 +212,7 @@ export const Navbar = () => {
   const handleLogout = async () => {
     workspaceStore.getState().reset();
     notificationStore.getState().reset();
+    bookmarkStore.getState().reset();
     await logout();
     navigate('/');
   };
@@ -250,6 +252,14 @@ export const Navbar = () => {
                     {draftCount}
                   </span>
                 )}
+              </Link>
+              <Link
+                to="/bookmarks"
+                className="flex items-center gap-2 px-3 py-2 font-body text-pencil hover:bg-muted rounded transition-colors"
+                aria-label="Reading list"
+              >
+                <Bookmark size={18} strokeWidth={2.5} />
+                <span className="hidden md:inline">Saved</span>
               </Link>
               <NotificationBell />
               <UserMenu user={user} onLogout={handleLogout} />
