@@ -3,6 +3,15 @@ dotenv.config();
 
 const isDev = process.env.NODE_ENV !== 'production';
 
+// Express `trust proxy` value, so req.ip (and rate-limit keying) reflects the
+// real client behind a reverse proxy. Default: 1 hop in prod, 0 in dev.
+const _parseTrustProxy = (v) => {
+  if (v === undefined) return isDev ? 0 : 1;
+  if (v === 'true' || v === 'false') return v === 'true';
+  const n = parseInt(v, 10);
+  return Number.isNaN(n) ? v : n; // allow subnet/'loopback' strings
+};
+
 const _required = (key) => {
   const val = process.env[key];
   if (!val) throw new Error(`Missing required env var: ${key}`);
@@ -43,5 +52,6 @@ export const env = {
   JWT_REFRESH_SECRET: _secret('JWT_REFRESH_SECRET'),
   JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
   CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
+  TRUST_PROXY: _parseTrustProxy(process.env.TRUST_PROXY),
   isDev,
 };

@@ -1,4 +1,6 @@
+import mongoose from 'mongoose';
 import { Post } from '../models/post.model.js';
+import { PostView } from '../models/postView.model.js';
 import { ApiError } from '../utils/ApiError.js';
 import { notificationService } from './notification.service.js';
 
@@ -24,6 +26,28 @@ const pickWritable = (data = {}) =>
 // injection in search) and guarantee a string (blocks NoSQL operator objects).
 const escapeRegex = (str) => String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+// Fields never exposed to non-authors / public listings.
+const PRIVATE_POST_FIELDS = '-views -uniqueViews -reads -__v';
+
+// Record a page view: total views always, unique only on a newly-created row.
+// Counters are eventually-consistent (two non-transactional writes).
+const countView = async (postId, visitorKey) => {
+  try {
+    const r = await PostView.updateOne(
+      { post: postId, visitor: visitorKey },
+      { $setOnInsert: { read: false } },
+      { upsert: true }
+    );
+    const inc = { views: 1 };
+    if (r.upsertedCount === 1) inc.uniqueViews = 1;
+    await Post.updateOne({ _id: postId }, { $inc: inc });
+  } catch (e) {
+    // Lost a concurrent upsert race: the row already exists, count the view only.
+    if (e.code === 11000) await Post.updateOne({ _id: postId }, { $inc: { views: 1 } });
+    else throw e;
+  }
+};
+
 export const postService = {
   async getFeed({ page = 1, tag, search, limit }) {
     const perPage = resolveLimit(limit);
@@ -44,7 +68,7 @@ export const postService = {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(perPage)
-        .select('-content')
+        .select(`-content ${PRIVATE_POST_FIELDS}`)
         .lean(),
       Post.countDocuments(filter),
     ]);
@@ -52,13 +76,101 @@ export const postService = {
     return { posts, total, page, perPage, pages: Math.ceil(total / perPage) };
   },
 
-  async getPost(slug) {
+  async getPost(slug, { viewerId, visitorKey } = {}) {
     const post = await Post.findOne({ slug, status: 'published' }).populate(
       'author',
       AUTHOR_FIELDS
     );
     if (!post) throw ApiError.notFound('Post not found');
-    return post;
+
+    const isAuthor = viewerId && post.author._id.equals(viewerId);
+    const obj = post.toObject();
+    delete obj.__v;
+
+    // Author sees their own denormalized counts inline; readers never do.
+    if (isAuthor) {
+      obj.views = post.views || 0;
+      obj.uniqueViews = post.uniqueViews || 0;
+      obj.reads = post.reads || 0;
+      return obj;
+    }
+
+    if (visitorKey) {
+      countView(post._id, visitorKey).catch((e) => console.error('[analytics:view]', e.message));
+    }
+    delete obj.views;
+    delete obj.uniqueViews;
+    delete obj.reads;
+    return obj;
+  },
+
+  async recordRead(postId, { viewerId, visitorKey } = {}) {
+    if (!mongoose.isValidObjectId(postId)) throw ApiError.notFound('Post not found');
+    const post = await Post.findOne({ _id: postId, status: 'published' }).select('author');
+    if (!post) throw ApiError.notFound('Post not found');
+
+    const isAuthor = viewerId && post.author.equals(viewerId);
+    if (isAuthor || !visitorKey) return;
+
+    // Flip this visitor's row to read. The before-state tells us whether it's a
+    // first read (or a brand-new visitor) so the counter can't be re-inflated.
+    let before;
+    try {
+      before = await PostView.findOneAndUpdate(
+        { post: postId, visitor: visitorKey },
+        { $set: { read: true } },
+        { upsert: true, new: false }
+      ).lean();
+    } catch (e) {
+      if (e.code !== 11000) throw e;
+      // Lost the insert race; the row now exists, so flip it without upserting.
+      before = await PostView.findOneAndUpdate(
+        { post: postId, visitor: visitorKey },
+        { $set: { read: true } },
+        { new: false }
+      ).lean();
+    }
+
+    const inc = {};
+    if (!before) {
+      inc.uniqueViews = 1;
+      inc.reads = 1;
+    } else if (!before.read) {
+      inc.reads = 1;
+    }
+    if (Object.keys(inc).length) await Post.updateOne({ _id: postId }, { $inc: inc });
+  },
+
+  async getAnalytics(authorId) {
+    const posts = await Post.find({ author: authorId, status: 'published' })
+      .select('title slug readingTime createdAt views uniqueViews reads claps')
+      .sort({ uniqueViews: -1, createdAt: -1 })
+      .lean();
+
+    const rows = posts.map((p) => ({
+      _id: p._id,
+      title: p.title,
+      slug: p.slug,
+      readingTime: p.readingTime,
+      createdAt: p.createdAt,
+      views: p.views || 0,
+      uniqueViews: p.uniqueViews || 0,
+      reads: p.reads || 0,
+      claps: p.claps?.length || 0,
+    }));
+
+    const totals = rows.reduce(
+      (acc, p) => {
+        acc.totalViews += p.views;
+        acc.totalUniqueViews += p.uniqueViews;
+        acc.totalReads += p.reads;
+        acc.totalClaps += p.claps;
+        return acc;
+      },
+      { totalPosts: rows.length, totalViews: 0, totalUniqueViews: 0, totalReads: 0, totalClaps: 0 }
+    );
+
+    return { totals, posts: rows };
   },
 
   async getOwnPost(postId, userId) {

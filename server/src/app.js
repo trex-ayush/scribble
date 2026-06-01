@@ -11,6 +11,9 @@ import { errorMiddleware, notFoundMiddleware } from './middleware/error.middlewa
 
 const app = express();
 
+// Derive the real client IP from the proxy chain so rate-limit keying is sound.
+app.set('trust proxy', env.TRUST_PROXY);
+
 app.use(helmet());
 app.use(cors({ origin: env.CLIENT_URL, credentials: true }));
 app.use(express.json({ limit: '2mb' }));
@@ -24,9 +27,8 @@ const limiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Too many requests, please try again later.' },
-  // Rate limiting is for production abuse protection; in development the
-  // StrictMode double-mounts + auth checks would exhaust it during normal use.
-  skip: () => env.isDev,
+  // Skip only in local dev; staging/misconfigured prod stay protected (fail closed).
+  skip: () => env.NODE_ENV === 'development',
 });
 app.use('/api', limiter);
 

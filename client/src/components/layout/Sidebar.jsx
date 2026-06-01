@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, PenLine, FileText, Bookmark, Settings } from 'lucide-react';
+import { Home, PenLine, FileText, Bookmark, BarChart3, Settings } from 'lucide-react';
 import { postsApi } from '../../api/posts.js';
 
 // Primary navigation, moved out of the top bar. Desktop (md+) = left rail;
@@ -10,6 +10,7 @@ const NAV = [
   { to: '/write', label: 'Write', icon: PenLine },
   { to: '/drafts', label: 'Drafts', icon: FileText, badge: true },
   { to: '/bookmarks', label: 'Saved', icon: Bookmark },
+  { to: '/stats', label: 'Stats', icon: BarChart3 },
   { to: '/settings', label: 'Settings', icon: Settings },
 ];
 

@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Clock, Tag, Heart, Trash2, Send, Pencil } from 'lucide-react';
+import { Clock, Tag, Heart, Trash2, Send, Pencil, Eye, BookOpen } from 'lucide-react';
 import { postsApi } from '../api/posts.js';
 import { useAuth } from '../hooks/useAuth.js';
 import { Button } from '../components/ui/Button.jsx';
 import { Textarea } from '../components/ui/Input.jsx';
 import { PostContent } from '../components/post/PostContent.jsx';
 import { BookmarkButton } from '../components/post/BookmarkButton.jsx';
+import { Tooltip } from '../components/ui/Tooltip.jsx';
 import { useFeedback } from '../components/feedback/FeedbackProvider.jsx';
 import { workspaceStore } from '../store/workspaceStore.js';
 
@@ -26,8 +27,11 @@ export const PostDetail = () => {
   const [commentText, setCommentText] = useState('');
   const [loading, setLoading] = useState(true);
   const [clapState, setClapState] = useState({ clapped: false, count: 0 });
+  const endRef = useRef(null);
+  const readFiredRef = useRef(false);
 
   useEffect(() => {
+    readFiredRef.current = false;
     const fetchData = async () => {
       try {
         const [postRes, commentsRes] = await Promise.all([
@@ -49,6 +53,24 @@ export const PostDetail = () => {
     };
     fetchData();
   }, [slug]);
+
+  // Count a read when a non-author scrolls to the end of the article.
+  useEffect(() => {
+    if (!post || !endRef.current) return;
+    if (user?.username === post.author?.username) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !readFiredRef.current) {
+          readFiredRef.current = true;
+          postsApi.recordRead(post._id).catch(() => {});
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    obs.observe(endRef.current);
+    return () => obs.disconnect();
+  }, [post, user]);
 
   const handleClap = async () => {
     if (!isAuthenticated) return navigate('/login');
@@ -167,6 +189,22 @@ export const PostDetail = () => {
               year: 'numeric', month: 'long', day: 'numeric',
             })}
           </span>
+          {post.uniqueViews !== undefined && (
+            <>
+              <Tooltip label="Unique viewers · total views">
+                <span className="flex items-center gap-1">
+                  <Eye size={12} strokeWidth={2.5} />
+                  {post.uniqueViews} · {post.views ?? 0}
+                </span>
+              </Tooltip>
+              <Tooltip label="Readers who finished the article">
+                <span className="flex items-center gap-1">
+                  <BookOpen size={12} strokeWidth={2.5} />
+                  {post.reads ?? 0}
+                </span>
+              </Tooltip>
+            </>
+          )}
         </div>
 
         {post.tags?.length > 0 && (
@@ -186,6 +224,7 @@ export const PostDetail = () => {
       </header>
 
       <PostContent content={post.content} format={post.format} />
+      <div ref={endRef} aria-hidden="true" />
 
       <div className="flex items-center gap-4 border-y-2 border-dashed border-pencil py-6">
         <button
