@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { Clock, Tag, Heart, Trash2, Send, Pencil, Eye, BookOpen, ArrowUp, Share2 } from 'lucide-react';
 import { postsApi } from '../api/posts.js';
 import { useAuth } from '../hooks/useAuth.js';
@@ -8,6 +8,7 @@ import { Textarea } from '../components/ui/Input.jsx';
 import { PostContent } from '../components/post/PostContent.jsx';
 import { BookmarkButton } from '../components/post/BookmarkButton.jsx';
 import { Tooltip } from '../components/ui/Tooltip.jsx';
+import { withNext } from '../lib/authRedirect.js';
 import { useFeedback } from '../components/feedback/FeedbackProvider.jsx';
 import { workspaceStore } from '../store/workspaceStore.js';
 
@@ -22,6 +23,7 @@ export const PostDetail = () => {
   const { user, isAuthenticated } = useAuth();
   const { toast, confirm } = useFeedback();
   const navigate = useNavigate();
+  const location = useLocation();
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
@@ -101,7 +103,9 @@ export const PostDetail = () => {
   };
 
   const handleClap = async () => {
-    if (!isAuthenticated) return navigate('/login');
+    if (!isAuthenticated) {
+      return navigate(withNext('/login', location.pathname + location.search));
+    }
     try {
       const { data } = await postsApi.toggleClap(post._id);
       setClapState({ clapped: data.data.clapped, count: data.data.clapCount });
@@ -303,7 +307,7 @@ export const PostDetail = () => {
           </form>
         ) : (
           <p className="font-body text-pencil/60">
-            <Link to="/login" className="text-ink hover:underline">Sign in</Link> to leave a response.
+            <Link to={withNext('/login', location.pathname + location.search)} className="text-ink hover:underline">Sign in</Link> to leave a response.
           </p>
         )}
 

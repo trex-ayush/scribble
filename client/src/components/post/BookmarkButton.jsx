@@ -1,8 +1,9 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Bookmark } from 'lucide-react';
 import { bookmarkStore } from '../../store/bookmarkStore.js';
 import { useAuth } from '../../hooks/useAuth.js';
+import { withNext } from '../../lib/authRedirect.js';
 
 /**
  * Toggle a post in the reading list.
@@ -11,6 +12,7 @@ import { useAuth } from '../../hooks/useAuth.js';
  */
 export const BookmarkButton = ({ postId, variant = 'icon', className = '' }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated } = useAuth();
   // Subscribe to just this post's saved state so the button re-renders on toggle.
   const saved = bookmarkStore((s) => s.ids.has(postId));
@@ -19,7 +21,10 @@ export const BookmarkButton = ({ postId, variant = 'icon', className = '' }) => 
   const handle = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!isAuthenticated) return navigate('/login');
+    // Send guests to login, then back to the page they were on.
+    if (!isAuthenticated) {
+      return navigate(withNext('/login', location.pathname + location.search));
+    }
     toggle(postId).catch(() => {});
   };
 

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Layout } from './components/layout/Layout.jsx';
 import { Home } from './pages/Home.jsx';
 import { Login } from './pages/Login.jsx';
@@ -20,10 +20,16 @@ import { NotFound } from './pages/NotFound.jsx';
 import { useAuth } from './hooks/useAuth.js';
 import { workspaceStore } from './store/workspaceStore.js';
 import { bookmarkStore } from './store/bookmarkStore.js';
+import { withNext } from './lib/authRedirect.js';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
+  const location = useLocation();
+  return isAuthenticated ? (
+    children
+  ) : (
+    <Navigate to={withNext('/login', location.pathname + location.search)} replace />
+  );
 };
 
 const App = () => {
