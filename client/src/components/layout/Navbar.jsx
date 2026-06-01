@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { PenLine, User, LogOut, FileText, Search, ChevronDown, Users } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth.js';
 import { Button } from '../ui/Button.jsx';
+import { withNext } from '../../lib/authRedirect.js';
 import { workspaceStore } from '../../store/workspaceStore.js';
 import { notificationStore } from '../../store/notificationStore.js';
 import { bookmarkStore } from '../../store/bookmarkStore.js';
@@ -182,6 +183,8 @@ const UserMenu = ({ user, onLogout }) => {
 export const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.pathname + location.search;
 
   const handleLogout = async () => {
     workspaceStore.getState().reset();
@@ -213,10 +216,10 @@ export const Navbar = () => {
             </>
           ) : (
             <>
-              <Link to="/login">
+              <Link to={withNext('/login', from)}>
                 <Button variant="secondary" size="sm">Sign in</Button>
               </Link>
-              <Link to="/register" className="hidden sm:block">
+              <Link to={withNext('/register', from)} className="hidden sm:block">
                 <Button size="sm">Get started</Button>
               </Link>
             </>

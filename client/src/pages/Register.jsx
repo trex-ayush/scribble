@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
 import { Button } from '../components/ui/Button.jsx';
 import { Input } from '../components/ui/Input.jsx';
 import { Card } from '../components/ui/Card.jsx';
+import { safeNext, withNext } from '../lib/authRedirect.js';
 
 export const Register = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const next = safeNext(searchParams.get('next'));
   const [form, setForm] = useState({ username: '', email: '', password: '', name: '' });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -21,7 +24,7 @@ export const Register = () => {
     setLoading(true);
     try {
       await register(form);
-      navigate('/');
+      navigate(next, { replace: true });
     } catch (err) {
       const data = err.response?.data;
       if (data?.errors?.length) {
@@ -98,7 +101,7 @@ export const Register = () => {
 
         <p className="font-body text-center text-pencil/60 text-sm">
           Already have an account?{' '}
-          <Link to="/login" className="text-ink hover:underline font-medium">
+          <Link to={withNext('/login', next)} className="text-ink hover:underline font-medium">
             Sign in
           </Link>
         </p>
