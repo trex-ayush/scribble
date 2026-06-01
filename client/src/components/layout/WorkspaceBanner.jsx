@@ -19,7 +19,7 @@ export const WorkspaceBanner = () => {
 
   return (
     <div className="relative z-[60] bg-postit border-b-[3px] border-dashed border-pencil">
-      <div className="max-w-7xl mx-auto px-6 py-2.5 flex items-center justify-center gap-3 flex-wrap">
+      <div className="w-full px-6 py-2.5 flex items-center justify-center gap-3 flex-wrap">
         <span className="flex items-center gap-2 font-body text-sm text-pencil">
           <Eye size={16} strokeWidth={2.5} className="text-accent shrink-0" />
           You're peeking into{' '}
