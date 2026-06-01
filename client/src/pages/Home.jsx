@@ -97,7 +97,7 @@ export const Home = () => {
     <div className="space-y-6">
       {showHero && (
         <section className="text-center py-16 space-y-6">
-          <h1 className="font-heading text-5xl md:text-7xl text-pencil leading-tight">
+          <h1 className="font-heading text-4xl sm:text-5xl md:text-7xl text-pencil leading-tight">
             Share your<br />
             <span className="text-accent inline-block -rotate-1 underline decoration-wavy decoration-accent/50">
               ideas
@@ -153,7 +153,7 @@ export const Home = () => {
       </div>
 
       {loading ? (
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2 pt-3">
           {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
         </div>
       ) : isUserSearch ? (
@@ -163,7 +163,7 @@ export const Home = () => {
             <p className="font-body text-pencil/60">Try a different name or username.</p>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-6 md:grid-cols-2 pt-3">
             {users.map((u) => <UserCard key={u._id} user={u} />)}
           </div>
         )
@@ -178,7 +178,7 @@ export const Home = () => {
           )}
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2 pt-3">
           {posts.map((post, i) => (
             <PostCard
               key={post._id}

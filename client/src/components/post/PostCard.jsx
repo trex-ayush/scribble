@@ -26,12 +26,12 @@ export const PostCard = ({ post, index = 0, isOwn = false }) => {
       )}
 
       <Link to={`/post/${post.slug}`} className="block space-y-3">
-        <h2 className="font-heading text-xl text-pencil group-hover:text-accent transition-colors leading-tight">
+        <h2 className="font-heading text-xl text-pencil group-hover:text-accent transition-colors leading-tight break-words">
           {post.title}
         </h2>
 
         {post.excerpt && (
-          <p className="font-body text-pencil/70 text-sm leading-relaxed line-clamp-2">
+          <p className="font-body text-pencil/70 text-sm leading-relaxed line-clamp-2 break-words">
             {post.excerpt}
           </p>
         )}
