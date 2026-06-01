@@ -1,24 +1,30 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Clock, Tag } from 'lucide-react';
+import { Clock, Tag, Star } from 'lucide-react';
 
 const BORDER_RADII = [
   '255px 15px 225px 15px / 15px 225px 15px 255px',
   '15px 255px 15px 225px / 225px 15px 255px 15px',
   '225px 25px 255px 25px / 25px 255px 25px 225px',
 ];
-const ROTATIONS = ['-rotate-1', 'rotate-1', '-rotate-[0.5deg]', 'rotate-[0.5deg]', 'rotate-0'];
 
-export const PostCard = ({ post, index = 0 }) => {
-  const rotation = ROTATIONS[index % ROTATIONS.length];
+// `isOwn` flags a post by the current user: red accent card + a post-it
+// "Your story" tag in the corner.
+export const PostCard = ({ post, index = 0, isOwn = false }) => {
   const radius = BORDER_RADII[index % BORDER_RADII.length];
 
   return (
     <article
-      className={`relative bg-white border-2 border-pencil shadow-hard p-6
-        hover:shadow-hard-lg hover:${rotation} transition-all duration-100 group`}
+      className="relative bg-white border-2 border-pencil shadow-hard p-6 transition-all duration-100 group hover:shadow-hard-lg"
       style={{ borderRadius: radius }}
     >
+      {isOwn && (
+        <span className="absolute -top-3 right-4 z-10 flex items-center gap-1 px-2 py-0.5 bg-postit border-2 border-pencil text-[11px] font-body text-pencil rotate-3 shadow-hard-sm wobbly-tag">
+          <Star size={10} strokeWidth={2.5} className="text-accent" fill="currentColor" />
+          Your story
+        </span>
+      )}
+
       <Link to={`/post/${post.slug}`} className="block space-y-3">
         <h2 className="font-heading text-xl text-pencil group-hover:text-accent transition-colors leading-tight">
           {post.title}

@@ -28,7 +28,7 @@ const SkeletonCard = () => (
 );
 
 export const Home = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [posts, setPosts] = useState([]);
   const [users, setUsers] = useState([]);
@@ -179,7 +179,14 @@ export const Home = () => {
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2">
-          {posts.map((post, i) => <PostCard key={post._id} post={post} index={i} />)}
+          {posts.map((post, i) => (
+            <PostCard
+              key={post._id}
+              post={post}
+              index={i}
+              isOwn={!!user && post.author?.username === user.username}
+            />
+          ))}
         </div>
       )}
 
