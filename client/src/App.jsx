@@ -15,6 +15,7 @@ import { ProfileSettings } from './pages/settings/ProfileSettings.jsx';
 import { ApiSettings } from './pages/settings/ApiSettings.jsx';
 import { ApiDocs } from './pages/settings/ApiDocs.jsx';
 import { TeamMembers } from './pages/settings/TeamMembers.jsx';
+import { Sessions } from './pages/settings/Sessions.jsx';
 import { ActivityLog } from './pages/ActivityLog.jsx';
 import { NotFound } from './pages/NotFound.jsx';
 import { useAuth } from './hooks/useAuth.js';
@@ -80,6 +81,7 @@ const App = () => {
           <Route path="team" element={<TeamMembers />} />
           <Route path="api" element={<ApiSettings />} />
           <Route path="api-docs" element={<ApiDocs />} />
+          <Route path="devices" element={<Sessions />} />
           <Route path="activity" element={<ActivityLog />} />
         </Route>
         {/* Back-compat: old /activity path redirects into settings. */}

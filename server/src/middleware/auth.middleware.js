@@ -1,4 +1,5 @@
 import { User } from '../models/user.model.js';
+import { Session } from '../models/session.model.js';
 import { ApiError } from '../utils/ApiError.js';
 import { verifyAccessToken } from '../utils/tokens.js';
 
@@ -13,7 +14,13 @@ export const authenticate = async (req, res, next) => {
     const decoded = verifyAccessToken(token);
     const user = await User.findById(decoded.id).lean();
     if (!user) throw ApiError.unauthorized();
-    req.user = { id: user._id, email: user.email, username: user.username, name: user.name };
+    // Every access token must map to a live session (also forces legacy
+    // pre-session tokens, which carry no sid, to re-login). A revoked device's
+    // session no longer exists → 401 on its next request (near-instant logout).
+    if (!decoded.sid || !(await Session.exists({ _id: decoded.sid, user: user._id }))) {
+      throw ApiError.unauthorized('Session ended');
+    }
+    req.user = { id: user._id, email: user.email, username: user.username, name: user.name, sid: decoded.sid };
     next();
   } catch (err) {
     next(err.isOperational ? err : ApiError.unauthorized());

@@ -25,4 +25,9 @@ router.post('/refresh', authLimiter, authController.refresh);
 router.post('/logout', authenticate, authController.logout);
 router.get('/me', authenticate, authController.me);
 
+// Device/session management. `/others` before `/:id` so it isn't read as an id.
+router.get('/sessions', authenticate, authController.getSessions);
+router.delete('/sessions/others', authenticate, authController.revokeOtherSessions);
+router.delete('/sessions/:id', authenticate, authController.revokeSession);
+
 export default router;
