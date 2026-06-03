@@ -14,10 +14,21 @@ const processQueue = (error) => {
   failedQueue = [];
 };
 
-// Auth endpoints should never trigger a refresh-retry: a failed login/refresh/me
-// is an expected 401, and retrying would double requests and risk a loop.
-const AUTH_PATHS = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/me'];
+// Auth endpoints should never trigger a refresh-retry: a failed login/register/
+// refresh/logout is an expected 401, and retrying would double requests or loop.
+// (`/auth/me` is intentionally NOT here, so an expired-token 401 on boot refreshes
+// and the user stays logged in.)
+const AUTH_PATHS = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/logout'];
 const isAuthRequest = (url = '') => AUTH_PATHS.some((p) => url.includes(p));
+
+// Serialize refresh across ALL tabs of the browser (they share the refresh
+// cookie). Without this, two tabs refreshing at once make the server rotate the
+// token twice and treat the second as reuse → it revokes the session and logs
+// the user out everywhere. The Web Lock guarantees one refresh at a time.
+const refreshTokens = () =>
+  typeof navigator !== 'undefined' && navigator.locks
+    ? navigator.locks.request('scribble-auth-refresh', () => api.post('/auth/refresh'))
+    : api.post('/auth/refresh');
 
 api.interceptors.response.use(
   (res) => res,
@@ -32,11 +43,16 @@ api.interceptors.response.use(
       original._retry = true;
       isRefreshing = true;
       try {
-        await api.post('/auth/refresh');
+        await refreshTokens();
         processQueue(null);
         return api(original);
       } catch (e) {
         processQueue(e);
+        // Refresh failed (session revoked/expired) — drop to logged-out state.
+        // Dynamic import avoids a static cycle (authStore imports this module).
+        import('../store/authStore.js')
+          .then(({ useAuthStore }) => useAuthStore.getState().setUser(null))
+          .catch(() => {});
         return Promise.reject(e);
       } finally {
         isRefreshing = false;
