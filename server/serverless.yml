@@ -1,0 +1,29 @@
+service: medium-api
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ap-south-1
+  environment:
+    NODE_ENV: production
+    MONGODB_URI: ${env:MONGODB_URI}
+    JWT_SECRET: ${env:JWT_SECRET}
+    JWT_EXPIRES_IN: ${env:JWT_EXPIRES_IN, '15m'}
+    JWT_REFRESH_SECRET: ${env:JWT_REFRESH_SECRET}
+    JWT_REFRESH_EXPIRES_IN: ${env:JWT_REFRESH_EXPIRES_IN, '30d'}
+    CLIENT_URL: ${env:CLIENT_URL}
+    TRUST_PROXY: '1'
+
+functions:
+  api:
+    handler: lambda.main
+    timeout: 29
+    events:
+      - httpApi: '*'
+
+package:
+  patterns:
+    - '!.env*'
+    - '!nodemon.json'
+    - '!README.md'
+    - '!**/*.test.js'

@@ -6,7 +6,7 @@ import { env } from '../config/env.js';
 const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: !env.isDev,
-  sameSite: env.isDev ? 'lax' : 'strict',
+  sameSite: env.isDev ? 'lax' : 'none',
 };
 
 const _setCookies = (res, { accessToken, refreshToken }) => {
