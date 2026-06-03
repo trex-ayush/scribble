@@ -18,8 +18,18 @@ functions:
   api:
     handler: lambda.main
     timeout: 29
-    events:
-      - httpApi: '*'
+    url: true
+    iamManagedPolicies:
+      - arn:aws:iam::aws:policy/AWSLambdaBasicExecutionRole
+
+resources:
+  Resources:
+    ApiLambdaInvokePermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName: !GetAtt ApiLambdaFunction.Arn
+        Action: lambda:InvokeFunction
+        Principal: "*"
 
 package:
   patterns:
