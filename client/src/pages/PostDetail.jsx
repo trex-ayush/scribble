@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth.js';
 import { Button } from '../components/ui/Button.jsx';
 import { Textarea } from '../components/ui/Input.jsx';
 import { PostContent } from '../components/post/PostContent.jsx';
+import { ReadingProgress } from '../components/post/ReadingProgress.jsx';
 import { BookmarkButton } from '../components/post/BookmarkButton.jsx';
 import { Tooltip } from '../components/ui/Tooltip.jsx';
 import { withNext } from '../lib/authRedirect.js';
@@ -31,6 +32,7 @@ export const PostDetail = () => {
   const [clapState, setClapState] = useState({ clapped: false, count: 0 });
   const [showTop, setShowTop] = useState(false);
   const endRef = useRef(null);
+  const articleRef = useRef(null);
   const readFiredRef = useRef(false);
 
   useEffect(() => {
@@ -173,6 +175,8 @@ export const PostDetail = () => {
 
   return (
     <article className="space-y-10">
+      <ReadingProgress targetRef={articleRef} />
+      <div ref={articleRef} className="space-y-10">
       <header className="space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
           <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl text-pencil leading-tight break-words">
@@ -271,6 +275,7 @@ export const PostDetail = () => {
         onCopyHeading={() => toast.success('Section link copied')}
       />
       <div ref={endRef} aria-hidden="true" />
+      </div>
 
       <div className="flex items-center gap-4 border-y-2 border-dashed border-pencil py-6">
         <button

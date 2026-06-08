@@ -9,7 +9,7 @@ import { useAuth } from '../../hooks/useAuth.js';
 export const Layout = () => {
   const { isAuthenticated } = useAuth();
   return (
-    <div className="min-h-screen flex flex-col bg-paper overflow-x-hidden">
+    <div className="min-h-screen flex flex-col bg-paper overflow-x-clip">
       <WorkspaceBanner />
       <Navbar />
       <div className="flex-1 w-full flex">
