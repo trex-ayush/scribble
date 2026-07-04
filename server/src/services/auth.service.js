@@ -5,6 +5,22 @@ import { ApiError } from '../utils/ApiError.js';
 import { generateTokenPair, verifyRefreshToken } from '../utils/tokens.js';
 import { parseDevice, sha256 } from '../utils/device.js';
 
+const slugifyBase = (str) =>
+  String(str || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 20);
+
+// Unique username from the name (or email), with a random suffix on collision.
+const generateUniqueUsername = async (name, email) => {
+  let base = slugifyBase(name) || slugifyBase((email || '').split('@')[0]) || 'writer';
+  if (base.length < 3) base = `${base}writer`.slice(0, 20);
+  let candidate = base;
+  for (let i = 0; i < 6; i++) {
+    if (!(await User.exists({ username: candidate }))) return candidate;
+    const suffix = String(Math.floor(1000 + Math.random() * 9000));
+    candidate = `${base.slice(0, 30 - suffix.length)}${suffix}`;
+  }
+  return `${base.slice(0, 22)}${Date.now().toString(36)}`.slice(0, 30);
+};
+
 // Issue a token pair bound to a fresh Session (records device/ip + the refresh
 // token hash for rotation/reuse detection). Returns the tokens.
 const createSession = async (user, meta = {}) => {
@@ -26,12 +42,30 @@ const createSession = async (user, meta = {}) => {
 
 export const authService = {
   async register({ username, email, password, name }, meta = {}) {
-    const exists = await User.findOne({ $or: [{ email }, { username }] });
-    if (exists) {
-      const field = exists.email === email ? 'Email' : 'Username';
-      throw ApiError.conflict(`${field} already in use`);
+    if (await User.findOne({ email })) throw ApiError.conflict('Email already in use');
+
+    let finalUsername;
+    if (username) {
+      if (await User.findOne({ username })) throw ApiError.conflict('Username already in use');
+      finalUsername = username;
+    } else {
+      finalUsername = await generateUniqueUsername(name, email);
     }
-    const user = await User.create({ username, email, password, name });
+
+    let user;
+    try {
+      user = await User.create({ username: finalUsername, email, password, name });
+    } catch (e) {
+      // Lost a race on the generated username — retry once.
+      if (e.code === 11000 && !username) {
+        user = await User.create({
+          username: await generateUniqueUsername(name, email),
+          email,
+          password,
+          name,
+        });
+      } else throw e;
+    }
     const tokens = await createSession(user, meta);
     return { user: user.toPublicJSON(), tokens };
   },

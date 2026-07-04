@@ -11,7 +11,7 @@ export const Register = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const next = safeNext(searchParams.get('next'));
-  const [form, setForm] = useState({ username: '', email: '', password: '', name: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', username: '' });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
@@ -56,21 +56,13 @@ export const Register = () => {
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
-          label="Full name (optional)"
+          label="Full name"
           name="name"
           value={form.name}
           onChange={handleChange}
           placeholder="Your name"
+          error={errors.name}
           autoComplete="name"
-        />
-        <Input
-          label="Username"
-          name="username"
-          value={form.username}
-          onChange={handleChange}
-          placeholder="your_username"
-          error={errors.username}
-          autoComplete="username"
           required
         />
         <Input
@@ -84,6 +76,22 @@ export const Register = () => {
           autoComplete="email"
           required
         />
+        <div className="space-y-1">
+          <Input
+            label="Username (optional)"
+            name="username"
+            value={form.username}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') }))
+            }
+            placeholder="Leave blank and we'll pick one"
+            error={errors.username}
+            autoComplete="username"
+          />
+          <p className="font-body text-xs text-pencil/50">
+            You can set or change this later in Settings.
+          </p>
+        </div>
         <PasswordInput
           label="Password"
           name="password"
