@@ -1,0 +1,21 @@
+# Netlify build config for the Scribble frontend (Vite + React Router SPA).
+# Base directory is this folder (client/); publish the Vite build output.
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# The app calls a same-origin /api/v1/*; proxy those to the backend on Render so
+# the browser stays same-origin and the httpOnly auth cookie stays first-party.
+# MUST stay above the SPA fallback below (first match wins).
+[[redirects]]
+  from = "/api/*"
+  to = "https://scribble-t478.onrender.com/api/:splat"
+  status = 200
+  force = true
+
+# SPA fallback: serve index.html for any route so client-side routing handles
+# deep links (e.g. /settings/team) instead of returning a 404.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
