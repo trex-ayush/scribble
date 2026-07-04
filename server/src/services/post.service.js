@@ -263,6 +263,18 @@ export const postService = {
       .lean();
   },
 
+  // Lean title/excerpt match for the search type-ahead — only the fields the
+  // suggestion dropdown needs (keeps the per-keystroke payload small).
+  async searchSuggest(search, limit = 5) {
+    const safe = new RegExp(escapeRegex(String(search).trim()), 'i');
+    return Post.find({ status: 'published', $or: [{ title: safe }, { excerpt: safe }] })
+      .populate('author', AUTHOR_FIELDS)
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .select('title slug readingTime')
+      .lean();
+  },
+
   // Distinct tags actually used in published posts, most-used first.
   async getPopularTags(limit = 20) {
     const result = await Post.aggregate([
