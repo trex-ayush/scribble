@@ -8,6 +8,8 @@ const api = axios.create({
 
 let isRefreshing = false;
 let failedQueue = [];
+// One-shot guard for the revoked-membership exit below.
+let exitedWorkspace = false;
 
 const processQueue = (error) => {
   failedQueue.forEach((p) => (error ? p.reject(error) : p.resolve()));
@@ -48,15 +50,33 @@ api.interceptors.response.use(
         return api(original);
       } catch (e) {
         processQueue(e);
-        // Refresh failed (session revoked/expired) — drop to logged-out state.
-        // Dynamic import avoids a static cycle (authStore imports this module).
+        // Refresh failed — log out and clear the workspace so its id can't
+        // leak into the next login. Dynamic imports avoid a static cycle.
         import('../store/authStore.js')
           .then(({ useAuthStore }) => useAuthStore.getState().setUser(null))
+          .catch(() => {});
+        import('../store/workspaceStore.js')
+          .then(({ workspaceStore }) => workspaceStore.getState().reset())
           .catch(() => {});
         return Promise.reject(e);
       } finally {
         isRefreshing = false;
       }
+    }
+
+    // Membership revoked mid-session — exit to the personal workspace once.
+    if (
+      err.response?.status === 403 &&
+      err.response?.data?.message === 'You are not a member of this workspace' &&
+      !exitedWorkspace
+    ) {
+      exitedWorkspace = true;
+      import('../store/workspaceStore.js')
+        .then(({ workspaceStore }) => {
+          workspaceStore.getState().reset();
+          window.location.assign('/');
+        })
+        .catch(() => {});
     }
     return Promise.reject(err);
   }

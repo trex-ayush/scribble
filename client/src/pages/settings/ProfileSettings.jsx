@@ -11,8 +11,8 @@ export const ProfileSettings = () => {
   const { user, setUser } = useAuth();
   const { toast } = useFeedback();
   const active = workspaceStore((s) => s.active);
-  // 'read' members can view the owner's profile but not edit it.
-  const canEdit = !active || active.role === 'full';
+  // The API only edits your OWN profile, so impersonation is view-only.
+  const canEdit = !active;
   const [form, setForm] = useState({ name: user?.name || '', bio: user?.bio || '' });
   const [loading, setLoading] = useState(false);
 
@@ -54,7 +54,7 @@ export const ProfileSettings = () => {
       <div>
         <h2 className="font-heading text-2xl text-pencil">Profile</h2>
         <p className="font-body text-sm text-pencil/60">
-          {active ? `Editing ${active.name}'s profile.` : 'Update how others see you.'}
+          {active ? `Viewing ${active.name}'s profile (read-only).` : 'Update how others see you.'}
         </p>
       </div>
 
