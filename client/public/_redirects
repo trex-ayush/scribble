@@ -1,1 +1,7 @@
-/*    /index.html   200
+# Proxy API calls to the backend on Render so the browser stays same-origin
+# (keeps the httpOnly auth cookie first-party). MUST be above the SPA catch-all,
+# because Netlify processes _redirects top-to-bottom and first match wins.
+/api/*  https://scribble-t478.onrender.com/api/:splat  200
+
+# SPA fallback: serve index.html for any other route (React Router deep links).
+/*  /index.html  200
