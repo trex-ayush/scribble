@@ -34,14 +34,19 @@ export const userService = {
     return user[field];
   },
 
-  async updateProfile(userId, { name, bio }) {
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { name, bio },
-      { new: true, runValidators: true }
-    );
-    if (!user) throw ApiError.notFound('User not found');
-    return user.toPublicJSON();
+  async updateProfile(userId, { name, bio, username }) {
+    const update = {};
+    if (name !== undefined) update.name = name;
+    if (bio !== undefined) update.bio = bio;
+    if (username) update.username = username;
+    try {
+      const user = await User.findByIdAndUpdate(userId, update, { new: true, runValidators: true });
+      if (!user) throw ApiError.notFound('User not found');
+      return user.toPublicJSON();
+    } catch (e) {
+      if (e.code === 11000) throw ApiError.conflict('That username is already taken');
+      throw e;
+    }
   },
 
   async getUserPosts(username, requesterId) {
