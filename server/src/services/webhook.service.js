@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import dns from 'node:dns/promises';
 import { Webhook } from '../models/webhook.model.js';
 import { WebhookDelivery } from '../models/webhookDelivery.model.js';
 import { ApiError } from '../utils/ApiError.js';
@@ -34,15 +35,33 @@ const _view = (w) => ({
 
 // --- SSRF guard ----------------------------------------------------------
 const _isPrivateHost = (host) => {
-  const h = host.toLowerCase();
+  let h = host.toLowerCase().replace(/^\[|\]$/g, ''); // strip IPv6 brackets
   if (h === 'localhost' || h.endsWith('.localhost')) return true;
-  if (h === '::1' || h === '0.0.0.0') return true;
+  if (h === '::1' || h === '::' || h === '0.0.0.0') return true;
+  const mapped = h.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/); // IPv4-mapped IPv6
+  if (mapped) h = mapped[1];
   if (/^127\./.test(h)) return true;
   if (/^10\./.test(h)) return true;
   if (/^192\.168\./.test(h)) return true;
   if (/^172\.(1[6-9]|2\d|3[01])\./.test(h)) return true;
   if (/^169\.254\./.test(h)) return true; // link-local / cloud metadata
+  if (/^(fc|fd)[0-9a-f]{2}:/.test(h)) return true; // IPv6 unique-local fc00::/7
+  if (/^fe[89ab][0-9a-f]:/.test(h)) return true; // IPv6 link-local fe80::/10
   return false;
+};
+
+// DNS-rebinding guard: a hostname that passed _assertSafeUrl at save time can
+// later resolve to an internal IP. Re-check every resolved address at send time.
+const _assertPublicResolved = async (hostname) => {
+  let addrs;
+  try {
+    addrs = await dns.lookup(hostname, { all: true });
+  } catch {
+    throw ApiError.badRequest('Could not resolve webhook host');
+  }
+  if (addrs.some((a) => _isPrivateHost(a.address))) {
+    throw ApiError.badRequest('Webhook URL resolves to a private address');
+  }
 };
 
 const _assertSafeUrl = (raw) => {
@@ -230,17 +249,38 @@ export const webhookService = {
     let attempts = 0;
     let ok = false;
 
+    // SSRF: validate the resolved IP at send time, not just the saved URL.
+    if (!env.isDev) {
+      try {
+        await _assertPublicResolved(new URL(hook.url).hostname);
+      } catch (err) {
+        lastError = err.message;
+        await webhookService._recordDelivery(hook, {
+          eventId, event, ok: false, lastStatus: null, lastError, attempts: 0, payload,
+          responseBody: null, source: opts.source,
+        });
+        return { ok: false, statusCode: null, error: lastError, attempts: 0 };
+      }
+    }
+
     for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
       if (BACKOFF_MS[attempt]) await _sleep(BACKOFF_MS[attempt]);
       attempts = attempt + 1;
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), DELIVERY_TIMEOUT_MS);
       try {
-        const res = await fetch(hook.url, { method: 'POST', headers, body: payload, signal: controller.signal });
+        const res = await fetch(hook.url, {
+          method: 'POST', headers, body: payload, signal: controller.signal, redirect: 'manual',
+        });
         lastStatus = res.status;
         responseBody = _truncate(await res.text().catch(() => ''));
         if (res.ok) {
           ok = true;
+          break;
+        }
+        // Don't follow redirects — they can point at internal addresses (SSRF).
+        if (res.status >= 300 && res.status < 400) {
+          lastError = 'Redirects are not allowed';
           break;
         }
         lastError = `HTTP ${res.status}`;

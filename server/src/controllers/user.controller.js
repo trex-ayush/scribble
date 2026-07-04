@@ -14,9 +14,9 @@ export const userController = {
   }),
 
   updateProfile: asyncHandler(async (req, res) => {
-    // Edits the active account's profile. Read-only members are blocked by the
-    // enforceReadOnly middleware before reaching here.
-    const user = await userService.updateProfile(req.workspaceOwner || req.user.id, req.body);
+    // Always edits the authenticated user's OWN profile — never the workspace
+    // owner's. Otherwise a `full` team member could rewrite the owner's identity.
+    const user = await userService.updateProfile(req.user.id, req.body);
     ApiResponse.success(res, { user }, 'Profile updated');
   }),
 
