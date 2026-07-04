@@ -2,6 +2,7 @@ import { User } from '../models/user.model.js';
 import { Post } from '../models/post.model.js';
 import { ApiError } from '../utils/ApiError.js';
 import { notificationService } from './notification.service.js';
+import { webhookService } from './webhook.service.js';
 
 const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -78,6 +79,17 @@ export const userService = {
         recipient: target._id,
         actor: followerId,
         type: 'follow',
+      });
+
+      // Notify the followed user's external integrations.
+      webhookService.dispatch(target._id, 'follow.created', {
+        follower: followerId,
+        user: { id: target._id, username: target.username },
+      });
+    } else {
+      webhookService.dispatch(target._id, 'follow.deleted', {
+        follower: followerId,
+        user: { id: target._id, username: target.username },
       });
     }
 
