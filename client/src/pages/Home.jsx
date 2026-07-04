@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { PenLine, Tag, X } from 'lucide-react';
+import { PenLine, Tag, X, Users, FileText } from 'lucide-react';
 import { postsApi } from '../api/posts.js';
 import { usersApi } from '../api/users.js';
 import { PostCard } from '../components/post/PostCard.jsx';
@@ -12,6 +12,7 @@ import { useAuth } from '../hooks/useAuth.js';
 const PER_PAGE_OPTIONS = [10, 20, 30, 50];
 
 const MAX_TAGS = 7;
+const MAX_PEOPLE = 6;
 const DEFAULT_TAGS = ['react', 'javascript', 'design', 'career', 'ai', 'productivity', 'writing'];
 
 // Show real (used) tags first; if fewer than MAX_TAGS, top up with defaults.
@@ -31,36 +32,38 @@ export const Home = () => {
   const { isAuthenticated, user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [posts, setPosts] = useState([]);
-  const [users, setUsers] = useState([]);
+  const [people, setPeople] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 });
   const [loading, setLoading] = useState(true);
   const [tags, setTags] = useState(DEFAULT_TAGS);
 
   const activeTag = searchParams.get('tag') || '';
   const activeSearch = searchParams.get('search') || '';
-  const searchType = searchParams.get('type') === 'users' ? 'users' : 'stories';
-  const isUserSearch = searchType === 'users' && !!activeSearch;
   const currentPage = parseInt(searchParams.get('page') || '1', 10);
   const perPage = parseInt(searchParams.get('limit') || '10', 10);
+  const searching = !!activeSearch;
 
-  // Fetch posts or users depending on the search type.
+  // Fetch stories, and — when searching — matching people to blend in.
   useEffect(() => {
     const run = async () => {
       setLoading(true);
       try {
-        if (isUserSearch) {
-          const { data } = await usersApi.search(activeSearch);
-          setUsers(data.data.users);
-        } else {
-          const { data } = await postsApi.getFeed({
+        const [feedRes, usersRes] = await Promise.all([
+          postsApi.getFeed({
             page: currentPage,
             limit: perPage,
             tag: activeTag || undefined,
             search: activeSearch || undefined,
-          });
-          setPosts(data.data.posts);
-          setPagination({ page: data.data.page, pages: data.data.pages, total: data.data.total });
-        }
+          }),
+          searching ? usersApi.search(activeSearch) : Promise.resolve(null),
+        ]);
+        setPosts(feedRes.data.data.posts);
+        setPagination({
+          page: feedRes.data.data.page,
+          pages: feedRes.data.data.pages,
+          total: feedRes.data.data.total,
+        });
+        setPeople(usersRes ? usersRes.data.data.users : []);
       } catch (e) {
         console.error(e);
       } finally {
@@ -68,7 +71,7 @@ export const Home = () => {
       }
     };
     run();
-  }, [currentPage, perPage, activeTag, activeSearch, isUserSearch]);
+  }, [currentPage, perPage, activeTag, activeSearch, searching]);
 
   useEffect(() => {
     postsApi
@@ -92,6 +95,7 @@ export const Home = () => {
   };
 
   const showHero = !isAuthenticated && !activeSearch && !activeTag;
+  const showPeople = searching && people.length > 0;
 
   return (
     <div className="space-y-6">
@@ -118,7 +122,7 @@ export const Home = () => {
       <div className="space-y-4">
         {activeSearch && (
           <div className="flex items-center gap-2 font-body text-pencil">
-            <span className="text-pencil/60">{isUserSearch ? 'People matching' : 'Results for'}</span>
+            <span className="text-pencil/60">Results for</span>
             <span className="flex items-center gap-2 px-3 py-1 bg-postit border-2 border-pencil wobbly-tag">
               “{activeSearch}”
               <button
@@ -132,8 +136,8 @@ export const Home = () => {
           </div>
         )}
 
-        {/* Tag filters only apply to story browsing */}
-        {!isUserSearch && (
+        {/* Tag filters are for browsing; hidden on the focused results page. */}
+        {!searching && (
           <div className="flex flex-wrap gap-2">
             {tags.map((tag) => (
               <button
@@ -152,45 +156,68 @@ export const Home = () => {
         )}
       </div>
 
-      {loading ? (
-        <div className="grid gap-6 md:grid-cols-2 pt-3">
-          {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
-        </div>
-      ) : isUserSearch ? (
-        users.length === 0 ? (
-          <div className="text-center py-20 space-y-2">
-            <p className="font-heading text-3xl text-pencil">No people found!</p>
-            <p className="font-body text-pencil/60">Try a different name or username.</p>
+      {/* People — only while searching, and only when there are matches. */}
+      {showPeople && (
+        <section className="space-y-3">
+          <h2 className="flex items-center gap-2 font-heading text-2xl text-pencil">
+            <Users size={20} strokeWidth={2.5} /> People
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {people.slice(0, MAX_PEOPLE).map((u) => (
+              <UserCard key={u._id} user={u} />
+            ))}
           </div>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2 pt-3">
-            {users.map((u) => <UserCard key={u._id} user={u} />)}
-          </div>
-        )
-      ) : posts.length === 0 ? (
-        <div className="text-center py-20 space-y-4">
-          <p className="font-heading text-3xl text-pencil">No stories found!</p>
-          <p className="font-body text-pencil/60">
-            {activeSearch || activeTag ? 'Try a different search or tag.' : 'Be the first to write something.'}
-          </p>
-          {isAuthenticated && !activeSearch && !activeTag && (
-            <Link to="/write"><Button>Write a story</Button></Link>
-          )}
-        </div>
-      ) : (
-        <div className="grid gap-6 md:grid-cols-2 pt-3">
-          {posts.map((post, i) => (
-            <PostCard
-              key={post._id}
-              post={post}
-              index={i}
-              isOwn={!!user && post.author?.username === user.username}
-            />
-          ))}
-        </div>
+        </section>
       )}
 
-      {!isUserSearch && (
+      {/* Stories */}
+      <section className="space-y-4">
+        {searching && (
+          <h2 className="flex items-center gap-2 font-heading text-2xl text-pencil">
+            <FileText size={20} strokeWidth={2.5} /> Stories
+          </h2>
+        )}
+
+        {loading ? (
+          <div className="grid gap-6 md:grid-cols-2 pt-1">
+            {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
+          </div>
+        ) : posts.length === 0 ? (
+          searching ? (
+            showPeople ? (
+              <p className="font-body text-pencil/60">No stories match “{activeSearch}”.</p>
+            ) : (
+              <div className="text-center py-20 space-y-2">
+                <p className="font-heading text-3xl text-pencil">No results found!</p>
+                <p className="font-body text-pencil/60">Try a different search.</p>
+              </div>
+            )
+          ) : (
+            <div className="text-center py-20 space-y-4">
+              <p className="font-heading text-3xl text-pencil">No stories found!</p>
+              <p className="font-body text-pencil/60">
+                {activeTag ? 'Try a different tag.' : 'Be the first to write something.'}
+              </p>
+              {isAuthenticated && !activeTag && (
+                <Link to="/write"><Button>Write a story</Button></Link>
+              )}
+            </div>
+          )
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 pt-1">
+            {posts.map((post, i) => (
+              <PostCard
+                key={post._id}
+                post={post}
+                index={i}
+                isOwn={!!user && post.author?.username === user.username}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {!loading && posts.length > 0 && (
         <Pagination
           page={currentPage}
           pages={pagination.pages}
