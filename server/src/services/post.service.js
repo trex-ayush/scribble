@@ -1,6 +1,9 @@
 import mongoose from 'mongoose';
 import { Post } from '../models/post.model.js';
 import { PostView } from '../models/postView.model.js';
+import { Comment } from '../models/comment.model.js';
+import { Bookmark } from '../models/bookmark.model.js';
+import { Notification } from '../models/notification.model.js';
 import { ApiError } from '../utils/ApiError.js';
 import { notificationService } from './notification.service.js';
 import { webhookService } from './webhook.service.js';
@@ -213,6 +216,13 @@ export const postService = {
   async deletePost(postId, userId) {
     const post = await Post.findOneAndDelete({ _id: postId, author: userId });
     if (!post) throw ApiError.notFound('Post not found');
+    // Cascade: drop everything that referenced the post so nothing is orphaned.
+    await Promise.all([
+      Comment.deleteMany({ post: post._id }),
+      Bookmark.deleteMany({ post: post._id }),
+      Notification.deleteMany({ post: post._id }),
+      PostView.deleteMany({ post: post._id }),
+    ]);
     webhookService.dispatch(post.author, 'post.deleted', postHookData(post));
   },
 

@@ -58,6 +58,7 @@ userSchema.methods.comparePassword = function (candidate) {
 // (login / register / me / profile update). Still includes the owner's email.
 userSchema.methods.toPublicJSON = function () {
   const obj = this.toObject();
+  obj.id = obj._id.toString(); // toObject() omits the `id` virtual; clients compare against `.id`
   delete obj.password;
   delete obj.refreshToken;
   delete obj.apiSecret;
@@ -70,6 +71,7 @@ userSchema.methods.toPublicJSON = function () {
 // Keeps follower/following arrays since the UI derives counts + follow state.
 userSchema.methods.toProfileJSON = function () {
   const obj = this.toObject();
+  obj.id = obj._id.toString(); // clients derive follow-state by comparing against `.id`
   delete obj.password;
   delete obj.refreshToken;
   delete obj.apiSecret;
