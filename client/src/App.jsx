@@ -1,28 +1,32 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, lazy } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Layout } from './components/layout/Layout.jsx';
-import { Home } from './pages/Home.jsx';
-import { Login } from './pages/Login.jsx';
-import { Register } from './pages/Register.jsx';
-import { WritePost } from './pages/WritePost.jsx';
-import { Drafts } from './pages/Drafts.jsx';
-import { Bookmarks } from './pages/Bookmarks.jsx';
-import { Stats } from './pages/Stats.jsx';
-import { PostDetail } from './pages/PostDetail.jsx';
-import { Profile } from './pages/Profile.jsx';
-import { SettingsLayout } from './pages/settings/SettingsLayout.jsx';
-import { ProfileSettings } from './pages/settings/ProfileSettings.jsx';
-import { ApiSettings } from './pages/settings/ApiSettings.jsx';
-import { ApiDocs } from './pages/settings/ApiDocs.jsx';
-import { WebhookSettings, WebhookFormPage } from './pages/settings/WebhookSettings.jsx';
-import { TeamMembers } from './pages/settings/TeamMembers.jsx';
-import { Sessions } from './pages/settings/Sessions.jsx';
-import { ActivityLog } from './pages/ActivityLog.jsx';
-import { NotFound } from './pages/NotFound.jsx';
 import { useAuth } from './hooks/useAuth.js';
 import { workspaceStore } from './store/workspaceStore.js';
 import { bookmarkStore } from './store/bookmarkStore.js';
 import { withNext } from './lib/authRedirect.js';
+
+const named = (factory, name) => lazy(() => factory().then((m) => ({ default: m[name] })));
+
+const Home = named(() => import('./pages/Home.jsx'), 'Home');
+const Login = named(() => import('./pages/Login.jsx'), 'Login');
+const Register = named(() => import('./pages/Register.jsx'), 'Register');
+const WritePost = named(() => import('./pages/WritePost.jsx'), 'WritePost');
+const Drafts = named(() => import('./pages/Drafts.jsx'), 'Drafts');
+const Bookmarks = named(() => import('./pages/Bookmarks.jsx'), 'Bookmarks');
+const Stats = named(() => import('./pages/Stats.jsx'), 'Stats');
+const PostDetail = named(() => import('./pages/PostDetail.jsx'), 'PostDetail');
+const Profile = named(() => import('./pages/Profile.jsx'), 'Profile');
+const SettingsLayout = named(() => import('./pages/settings/SettingsLayout.jsx'), 'SettingsLayout');
+const ProfileSettings = named(() => import('./pages/settings/ProfileSettings.jsx'), 'ProfileSettings');
+const ApiSettings = named(() => import('./pages/settings/ApiSettings.jsx'), 'ApiSettings');
+const ApiDocs = named(() => import('./pages/settings/ApiDocs.jsx'), 'ApiDocs');
+const WebhookSettings = named(() => import('./pages/settings/WebhookSettings.jsx'), 'WebhookSettings');
+const WebhookFormPage = named(() => import('./pages/settings/WebhookSettings.jsx'), 'WebhookFormPage');
+const TeamMembers = named(() => import('./pages/settings/TeamMembers.jsx'), 'TeamMembers');
+const Sessions = named(() => import('./pages/settings/Sessions.jsx'), 'Sessions');
+const ActivityLog = named(() => import('./pages/ActivityLog.jsx'), 'ActivityLog');
+const NotFound = named(() => import('./pages/NotFound.jsx'), 'NotFound');
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
