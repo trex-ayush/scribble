@@ -14,10 +14,12 @@ const useCopy = () => {
   return [copied, copy];
 };
 
-const CopyBtn = ({ text }) => {
+// tone="dark" for the dark code blocks; default (light) for pencil-on-paper rows.
+const CopyBtn = ({ text, tone = 'light' }) => {
   const [copied, copy] = useCopy();
+  const cls = tone === 'dark' ? 'text-paper/60 hover:text-paper' : 'text-pencil/50 hover:text-pencil';
   return (
-    <button onClick={() => copy(text)} className="shrink-0 text-paper/60 hover:text-paper transition-colors" aria-label="Copy">
+    <button onClick={() => copy(text)} className={`shrink-0 transition-colors ${cls}`} aria-label="Copy">
       {copied ? <Check size={14} strokeWidth={2.5} /> : <Copy size={14} strokeWidth={2.5} />}
     </button>
   );
@@ -27,7 +29,7 @@ const CodeBlock = ({ children, lang = '' }) => (
   <div className="relative group">
     <div className="flex items-center justify-between px-3 py-1.5 bg-pencil/80 border-b border-white/10">
       <span className="font-mono text-[10px] text-paper/50 uppercase tracking-wider">{lang}</span>
-      <CopyBtn text={children} />
+      <CopyBtn text={children} tone="dark" />
     </div>
     <pre className="font-mono text-xs text-paper p-4 overflow-x-auto bg-pencil leading-relaxed">{children}</pre>
   </div>
@@ -35,23 +37,30 @@ const CodeBlock = ({ children, lang = '' }) => (
 
 const Badge = ({ method }) => {
   const colors = {
-    GET: 'bg-ink/20 text-ink border-ink/40',
-    POST: 'bg-green-100 text-green-700 border-green-300',
-    PUT: 'bg-yellow-100 text-yellow-700 border-yellow-300',
-    DELETE: 'bg-red-100 text-red-600 border-red-300',
+    GET: 'bg-sky',
+    POST: 'bg-mint',
+    PUT: 'bg-highlight',
+    DELETE: 'bg-blush',
   };
   return (
-    <span className={`shrink-0 inline-block px-2 py-0.5 font-mono text-xs font-bold border rounded ${colors[method]}`}>
+    <span className={`shrink-0 inline-block px-2 py-0.5 font-mono text-xs font-bold text-pencil border-2 border-pencil wobbly-tag ${colors[method]}`}>
       {method}
     </span>
   );
 };
 
 const AuthBadge = ({ required }) => (
-  <span className={`flex items-center gap-1 text-xs font-body px-2 py-0.5 border rounded ${required ? 'text-accent border-accent/40 bg-accent/5' : 'text-pencil/50 border-pencil/20'}`}>
+  <span className={`flex items-center gap-1 text-xs font-body text-pencil px-2 py-0.5 border-2 border-pencil wobbly-tag ${required ? 'bg-blush' : 'bg-mint'}`}>
     {required ? <Lock size={11} strokeWidth={2.5} /> : <Unlock size={11} strokeWidth={2.5} />}
     {required ? 'Basic Auth' : 'Open'}
   </span>
+);
+
+const SectionHead = ({ color, children }) => (
+  <p className="font-heading text-sm text-pencil flex items-center gap-2">
+    <span className={`shrink-0 w-2.5 h-2.5 border-2 border-pencil ${color}`} />
+    {children}
+  </p>
 );
 
 /* ─── field table ───────────────────────────────────────────────────────────── */
@@ -120,7 +129,7 @@ const EndpointCard = ({ method, path, summary, auth, params, body, response, cur
           {/* Path / Query params */}
           {params && (
             <div className="px-4 py-3 space-y-2">
-              <p className="font-heading text-sm text-pencil">Parameters</p>
+              <SectionHead color="bg-sky">Parameters</SectionHead>
               <FieldTable fields={params} />
             </div>
           )}
@@ -128,7 +137,7 @@ const EndpointCard = ({ method, path, summary, auth, params, body, response, cur
           {/* Request body */}
           {body && (
             <div className="px-4 py-3 space-y-2">
-              <p className="font-heading text-sm text-pencil">Request Body <span className="font-body text-xs text-pencil/50 font-normal">application/json</span></p>
+              <SectionHead color="bg-peach">Request Body <span className="font-body text-xs text-pencil/50 font-normal">application/json</span></SectionHead>
               <FieldTable fields={body} />
             </div>
           )}
@@ -136,7 +145,7 @@ const EndpointCard = ({ method, path, summary, auth, params, body, response, cur
           {/* Response */}
           {response && (
             <div className="px-4 py-3 space-y-2">
-              <p className="font-heading text-sm text-pencil">Response</p>
+              <SectionHead color="bg-mint">Response</SectionHead>
               <CodeBlock lang="json">{response}</CodeBlock>
             </div>
           )}
@@ -144,7 +153,7 @@ const EndpointCard = ({ method, path, summary, auth, params, body, response, cur
           {/* cURL example */}
           {curl && (
             <div className="px-4 py-3 space-y-2">
-              <p className="font-heading text-sm text-pencil">Example (cURL)</p>
+              <SectionHead color="bg-highlight">Example (cURL)</SectionHead>
               <CodeBlock lang="bash">{curl}</CodeBlock>
             </div>
           )}
@@ -347,7 +356,7 @@ export const ApiDocs = () => {
       {/* Header */}
       <Card className="space-y-3">
         <div className="flex items-start gap-3">
-          <span className="shrink-0 w-10 h-10 flex items-center justify-center bg-postit border-2 border-pencil rounded-full">
+          <span className="shrink-0 w-10 h-10 flex items-center justify-center bg-highlight border-2 border-pencil rounded-full">
             <BookOpen size={18} strokeWidth={2.5} />
           </span>
           <div>
@@ -464,10 +473,11 @@ print(response.json())`}</CodeBlock>
           <h3 className="font-heading text-xl text-pencil">HTTP Status Codes</h3>
           <div className="divide-y divide-dashed divide-pencil/20">
             {ERRORS.map((e) => (
-              <div key={e.code} className="flex items-start gap-4 py-2.5">
-                <code className={`font-mono text-sm font-bold shrink-0 w-10 ${
-                  e.code.startsWith('2') ? 'text-ink' : e.code.startsWith('4') ? 'text-accent' : 'text-pencil/60'
-                }`}>{e.code}</code>
+              <div key={e.code} className="flex items-center gap-3 py-2.5">
+                <span className={`shrink-0 w-3 h-3 rounded-full border-2 border-pencil ${
+                  e.code.startsWith('2') ? 'bg-mint' : e.code.startsWith('4') ? 'bg-blush' : 'bg-peach'
+                }`} />
+                <code className="font-mono text-sm font-bold shrink-0 w-10 text-pencil">{e.code}</code>
                 <span className="font-body text-sm text-pencil/70">{e.text}</span>
               </div>
             ))}

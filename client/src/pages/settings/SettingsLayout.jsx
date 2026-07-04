@@ -9,7 +9,7 @@ const NAV = [
   { to: '/settings/team', icon: Users, label: 'Team Members', ownerOnly: true },
   { to: '/settings/api', icon: KeyRound, label: 'API Settings', ownerOnly: true },
   { to: '/settings/webhooks', icon: Webhook, label: 'Webhooks', ownerOnly: true },
-  { to: '/settings/api-docs', icon: BookOpen, label: 'API Docs' },
+  { to: '/docs', icon: BookOpen, label: 'API Docs' },
   { to: '/settings/devices', icon: MonitorSmartphone, label: 'Devices' },
   { to: '/settings/activity', icon: Activity, label: 'Activity Log' },
 ];

@@ -1,5 +1,5 @@
 import React, { useEffect, lazy } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Layout } from './components/layout/Layout.jsx';
 import { useAuth } from './hooks/useAuth.js';
 import { workspaceStore } from './store/workspaceStore.js';
@@ -9,6 +9,7 @@ import { withNext } from './lib/authRedirect.js';
 const named = (factory, name) => lazy(() => factory().then((m) => ({ default: m[name] })));
 
 const Home = named(() => import('./pages/Home.jsx'), 'Home');
+const Landing = named(() => import('./pages/Landing.jsx'), 'Landing');
 const Login = named(() => import('./pages/Login.jsx'), 'Login');
 const Register = named(() => import('./pages/Register.jsx'), 'Register');
 const WritePost = named(() => import('./pages/WritePost.jsx'), 'WritePost');
@@ -38,6 +39,15 @@ const ProtectedRoute = ({ children }) => {
   );
 };
 
+// Landing page for logged-out visitors; the feed for everyone else (and for
+// logged-out search/tag browsing, so navbar search keeps working on "/").
+const HomeRoute = () => {
+  const { isAuthenticated } = useAuth();
+  const [params] = useSearchParams();
+  const browsing = params.get('search') || params.get('tag');
+  return !isAuthenticated && !browsing ? <Landing /> : <Home />;
+};
+
 const App = () => {
   const { fetchMe } = useAuth();
 
@@ -54,10 +64,12 @@ const App = () => {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<HomeRoute />} />
+        <Route path="/explore" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/post/:slug" element={<PostDetail />} />
+        <Route path="/docs" element={<ApiDocs />} />
         <Route
           path="/write"
           element={<ProtectedRoute><WritePost /></ProtectedRoute>}
@@ -88,7 +100,7 @@ const App = () => {
           <Route path="webhooks" element={<WebhookSettings />} />
           <Route path="webhooks/new" element={<WebhookFormPage />} />
           <Route path="webhooks/:id/edit" element={<WebhookFormPage />} />
-          <Route path="api-docs" element={<ApiDocs />} />
+          <Route path="api-docs" element={<Navigate to="/docs" replace />} />
           <Route path="devices" element={<Sessions />} />
           <Route path="activity" element={<ActivityLog />} />
         </Route>
