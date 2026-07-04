@@ -4,6 +4,7 @@ import { Clock, Pencil, Trash2, PenLine, Send } from 'lucide-react';
 import { postsApi } from '../api/posts.js';
 import { Button } from '../components/ui/Button.jsx';
 import { useFeedback } from '../components/feedback/FeedbackProvider.jsx';
+import { workspaceStore } from '../store/workspaceStore.js';
 
 const Spinner = () => (
   <div className="flex justify-center py-20">
@@ -14,6 +15,8 @@ const Spinner = () => (
 export const Drafts = () => {
   const navigate = useNavigate();
   const { toast, confirm } = useFeedback();
+  // Read-only members can browse drafts but not publish/edit/delete them.
+  const readOnly = workspaceStore((s) => s.active?.role === 'read');
   const [drafts, setDrafts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [publishingId, setPublishingId] = useState(null);
@@ -67,12 +70,14 @@ export const Drafts = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between border-b-2 border-dashed border-pencil pb-3">
         <h1 className="font-heading text-3xl text-pencil">Your drafts</h1>
-        <Link to="/write">
-          <Button size="sm" className="flex items-center gap-2">
-            <PenLine size={16} strokeWidth={2.5} />
-            New story
-          </Button>
-        </Link>
+        {!readOnly && (
+          <Link to="/write">
+            <Button size="sm" className="flex items-center gap-2">
+              <PenLine size={16} strokeWidth={2.5} />
+              New story
+            </Button>
+          </Link>
+        )}
       </div>
 
       {drafts.length === 0 ? (
@@ -111,30 +116,32 @@ export const Drafts = () => {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2 shrink-0">
-                <Button
-                  size="sm"
-                  onClick={() => handlePublish(draft._id)}
-                  loading={publishingId === draft._id}
-                  className="flex items-center gap-1.5"
-                >
-                  <Send size={14} strokeWidth={2.5} />
-                  Publish
-                </Button>
-                <Link to={`/write/${draft._id}`}>
-                  <Button variant="secondary" size="sm" className="flex items-center gap-1.5 w-full">
-                    <Pencil size={14} strokeWidth={2.5} />
-                    Edit
+              {!readOnly && (
+                <div className="flex flex-col gap-2 shrink-0">
+                  <Button
+                    size="sm"
+                    onClick={() => handlePublish(draft._id)}
+                    loading={publishingId === draft._id}
+                    className="flex items-center gap-1.5"
+                  >
+                    <Send size={14} strokeWidth={2.5} />
+                    Publish
                   </Button>
-                </Link>
-                <button
-                  onClick={() => handleDelete(draft._id)}
-                  className="flex items-center gap-1.5 justify-center px-3 py-1.5 text-sm font-body text-pencil/50 hover:text-accent transition-colors"
-                >
-                  <Trash2 size={14} strokeWidth={2.5} />
-                  Delete
-                </button>
-              </div>
+                  <Link to={`/write/${draft._id}`}>
+                    <Button variant="secondary" size="sm" className="flex items-center gap-1.5 w-full">
+                      <Pencil size={14} strokeWidth={2.5} />
+                      Edit
+                    </Button>
+                  </Link>
+                  <button
+                    onClick={() => handleDelete(draft._id)}
+                    className="flex items-center gap-1.5 justify-center px-3 py-1.5 text-sm font-body text-pencil/50 hover:text-accent transition-colors"
+                  >
+                    <Trash2 size={14} strokeWidth={2.5} />
+                    Delete
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>

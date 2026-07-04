@@ -140,6 +140,7 @@ export const TeamMembers = () => {
   const [members, setMembers] = useState([]);
   const [sharedWithMe, setSharedWithMe] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [busy, setBusy] = useState('');
   const [editing, setEditing] = useState(null); // member being edited in modal
   const [showAdd, setShowAdd] = useState(false);
@@ -148,11 +149,14 @@ export const TeamMembers = () => {
 
   const load = async () => {
     setLoading(true);
+    setLoadError(false);
     try {
       const [teamRes, myTeamsRes] = await Promise.all([teamApi.getTeam(), teamApi.getMyTeams()]);
       setMembers(teamRes.data.data.members);
       setSharedWithMe(myTeamsRes.data.data.teams);
-    } catch { /* ignore */ } finally {
+    } catch {
+      setLoadError(true);
+    } finally {
       setLoading(false);
     }
   };
@@ -226,6 +230,19 @@ export const TeamMembers = () => {
   };
 
   if (loading) return <Spinner />;
+
+  if (loadError) {
+    return (
+      <Card className="text-center py-10 space-y-4">
+        <p className="font-body text-sm text-accent bg-accent/10 border-2 border-accent px-4 py-3 wobbly-tag inline-block">
+          Could not load your team. Please check your connection and try again.
+        </p>
+        <div>
+          <Button variant="secondary" size="sm" onClick={load}>Retry</Button>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">

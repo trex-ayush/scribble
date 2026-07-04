@@ -47,12 +47,19 @@ export const teamService = {
     if (existing) throw ApiError.badRequest('This user is already a team member');
 
     // Directly accepted — no pending step.
-    const membership = await TeamMember.create({
-      owner: ownerId,
-      member: target._id,
-      role,
-      status: 'accepted',
-    });
+    let membership;
+    try {
+      membership = await TeamMember.create({
+        owner: ownerId,
+        member: target._id,
+        role,
+        status: 'accepted',
+      });
+    } catch (e) {
+      // Lost a concurrent-add race to the unique index.
+      if (e.code === 11000) throw ApiError.badRequest('This user is already a team member');
+      throw e;
+    }
 
     // Let the added member know they now have access to this workspace.
     await notificationService.notify({
@@ -87,21 +94,22 @@ export const teamService = {
     return membership;
   },
 
-  // Owner's team members.
+  // Owner's team members (rows with a deleted user doc are dropped).
   async getTeam(ownerId) {
     const members = await TeamMember.find({ owner: ownerId, status: 'accepted' })
       .populate('member', 'username name email')
       .sort({ createdAt: 1 })
       .lean();
-    return { members };
+    return { members: members.filter((m) => m.member) };
   },
 
   // Teams the user is a member of.
   async getMyTeams(memberId) {
-    return TeamMember.find({ member: memberId, status: 'accepted' })
+    const teams = await TeamMember.find({ member: memberId, status: 'accepted' })
       .populate('owner', 'username name')
       .sort({ createdAt: 1 })
       .lean();
+    return teams.filter((t) => t.owner);
   },
 
   // Audit "Access Now": records an entry in the OWNER's activity log stamped

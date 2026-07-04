@@ -56,7 +56,8 @@ export const postController = {
   }),
 
   getOwnPost: asyncHandler(async (req, res) => {
-    const post = await postService.getOwnPost(req.params.id, req.user.id);
+    // Workspace-scoped like getMyDrafts, so team members can open owner posts.
+    const post = await postService.getOwnPost(req.params.id, req.workspaceOwner || req.user.id);
     ApiResponse.success(res, { post });
   }),
 

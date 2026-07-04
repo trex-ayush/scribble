@@ -29,6 +29,7 @@ export const WritePost = () => {
   const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(isEditing);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [error, setError] = useState('');
 
   // Load an existing post/draft when editing.
@@ -43,7 +44,7 @@ export const WritePost = () => {
         setFormat(post.format || 'html');
         setTags(post.tags || []);
       } catch {
-        setError('Could not load this post for editing.');
+        setLoadFailed(true);
       } finally {
         setFetching(false);
       }
@@ -104,6 +105,21 @@ export const WritePost = () => {
     return (
       <div className="flex justify-center py-20">
         <div className="w-8 h-8 border-4 border-pencil border-t-accent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // Never render the editor for a post that didn't load — saving would
+  // overwrite it with blank content.
+  if (loadFailed) {
+    return (
+      <div className="max-w-md mx-auto text-center pt-16 space-y-4">
+        <p className="font-body text-sm text-accent bg-accent/10 border-2 border-accent px-4 py-3 wobbly-tag">
+          Could not load this post for editing.
+        </p>
+        <Button variant="secondary" size="sm" onClick={() => navigate('/drafts')}>
+          Back to drafts
+        </Button>
       </div>
     );
   }
