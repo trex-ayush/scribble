@@ -10,6 +10,12 @@ export default {
         accent: '#ff4d4d',
         ink: '#2d5da1',
         postit: '#fff9c4',
+        // Sketchbook accent fills — pair with a pencil border.
+        highlight: '#ffe066',
+        sky: '#a7d8f0',
+        blush: '#ffb3c1',
+        mint: '#b8e986',
+        peach: '#ffc078',
       },
       fontFamily: {
         heading: ['Kalam', 'cursive'],
