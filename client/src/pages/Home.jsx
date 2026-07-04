@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { PenLine, Tag, X, Users, FileText } from 'lucide-react';
+import { PenLine, Tag, X, Users, FileText, SearchX } from 'lucide-react';
 import { postsApi } from '../api/posts.js';
 import { usersApi } from '../api/users.js';
 import { PostCard } from '../components/post/PostCard.jsx';
 import { UserCard } from '../components/user/UserCard.jsx';
 import { Button } from '../components/ui/Button.jsx';
+import { EmptyState } from '../components/ui/EmptyState.jsx';
 import { Pagination } from '../components/ui/Pagination.jsx';
 import { useAuth } from '../hooks/useAuth.js';
 
@@ -83,6 +84,8 @@ export const Home = () => {
   const handleTagClick = (tag) => {
     setSearchParams(tag === activeTag ? {} : { tag });
   };
+
+  const clearFilters = () => setSearchParams({});
 
   const handlePage = (newPage) => {
     const next = { ...Object.fromEntries(searchParams), page: newPage };
@@ -187,21 +190,40 @@ export const Home = () => {
             showPeople ? (
               <p className="font-body text-pencil/60">No stories match “{activeSearch}”.</p>
             ) : (
-              <div className="text-center py-20 space-y-2">
-                <p className="font-heading text-3xl text-pencil">No results found!</p>
-                <p className="font-body text-pencil/60">Try a different search.</p>
-              </div>
+              <EmptyState
+                icon={SearchX}
+                label="no matches"
+                title={`No results for “${activeSearch}”`}
+                message="We couldn't find any stories or people. Try different keywords."
+                action={<Button variant="secondary" onClick={clearFilters}>Clear search</Button>}
+              />
             )
+          ) : activeTag ? (
+            <EmptyState
+              icon={SearchX}
+              label="nothing here"
+              title={`Nothing tagged “${activeTag}”`}
+              message="No stories use this tag yet — try another, or browse everything."
+              action={<Button variant="secondary" onClick={clearFilters}>Browse all stories</Button>}
+            />
           ) : (
-            <div className="text-center py-20 space-y-4">
-              <p className="font-heading text-3xl text-pencil">No stories found!</p>
-              <p className="font-body text-pencil/60">
-                {activeTag ? 'Try a different tag.' : 'Be the first to write something.'}
-              </p>
-              {isAuthenticated && !activeTag && (
-                <Link to="/write"><Button>Write a story</Button></Link>
-              )}
-            </div>
+            <EmptyState
+              icon={PenLine}
+              label="blank page"
+              title="No stories yet"
+              message={
+                isAuthenticated
+                  ? 'Your feed is empty — be the first to share something.'
+                  : 'Be the first to share something.'
+              }
+              action={
+                isAuthenticated ? (
+                  <Link to="/write"><Button>Write a story</Button></Link>
+                ) : (
+                  <Link to="/register"><Button>Get started</Button></Link>
+                )
+              }
+            />
           )
         ) : (
           <div className="grid gap-6 md:grid-cols-2 pt-1">
