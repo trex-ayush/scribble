@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { User, KeyRound, BookOpen, Activity, Users, MonitorSmartphone } from 'lucide-react';
+import { User, KeyRound, BookOpen, Activity, Users, MonitorSmartphone, Webhook } from 'lucide-react';
 import { workspaceStore } from '../../store/workspaceStore.js';
 
 const NAV = [
@@ -8,6 +8,7 @@ const NAV = [
   // Team Members & API Settings belong to the owner — hidden while impersonating.
   { to: '/settings/team', icon: Users, label: 'Team Members', ownerOnly: true },
   { to: '/settings/api', icon: KeyRound, label: 'API Settings', ownerOnly: true },
+  { to: '/settings/webhooks', icon: Webhook, label: 'Webhooks', ownerOnly: true },
   { to: '/settings/api-docs', icon: BookOpen, label: 'API Docs' },
   { to: '/settings/devices', icon: MonitorSmartphone, label: 'Devices' },
   { to: '/settings/activity', icon: Activity, label: 'Activity Log' },

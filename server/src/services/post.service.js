@@ -3,6 +3,12 @@ import { Post } from '../models/post.model.js';
 import { PostView } from '../models/postView.model.js';
 import { ApiError } from '../utils/ApiError.js';
 import { notificationService } from './notification.service.js';
+import { webhookService } from './webhook.service.js';
+
+// Minimal post shape sent in webhook payloads.
+const postHookData = (post) => ({
+  post: { id: post._id, slug: post.slug, title: post.title, tags: post.tags },
+});
 
 const POSTS_PER_PAGE = 10;
 const ALLOWED_PER_PAGE = [10, 15, 20, 30, 50, 100];
@@ -183,19 +189,31 @@ export const postService = {
   },
 
   async createPost(userId, data) {
-    return Post.create({ ...pickWritable(data), author: userId });
+    const post = await Post.create({ ...pickWritable(data), author: userId });
+    if (post.status === 'published') {
+      webhookService.dispatch(post.author, 'post.published', postHookData(post));
+    }
+    return post;
   },
 
   async updatePost(postId, userId, data) {
     const post = await Post.findOne({ _id: postId, author: userId });
     if (!post) throw ApiError.notFound('Post not found');
+    const wasPublished = post.status === 'published';
     Object.assign(post, pickWritable(data));
-    return post.save();
+    const saved = await post.save();
+    // First publish fires post.published; editing an already-live post fires post.updated.
+    if (saved.status === 'published') {
+      const event = wasPublished ? 'post.updated' : 'post.published';
+      webhookService.dispatch(saved.author, event, postHookData(saved));
+    }
+    return saved;
   },
 
   async deletePost(postId, userId) {
     const post = await Post.findOneAndDelete({ _id: postId, author: userId });
     if (!post) throw ApiError.notFound('Post not found');
+    webhookService.dispatch(post.author, 'post.deleted', postHookData(post));
   },
 
   async toggleClap(postId, userId) {
@@ -216,6 +234,13 @@ export const postService = {
         actor: userId,
         type: 'clap',
         post: post._id,
+      });
+
+      // Notify the author's external integrations.
+      webhookService.dispatch(post.author, 'clap.created', {
+        ...postHookData(post),
+        clapBy: userId,
+        clapCount: updated.claps.length,
       });
     }
 

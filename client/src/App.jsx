@@ -14,6 +14,7 @@ import { SettingsLayout } from './pages/settings/SettingsLayout.jsx';
 import { ProfileSettings } from './pages/settings/ProfileSettings.jsx';
 import { ApiSettings } from './pages/settings/ApiSettings.jsx';
 import { ApiDocs } from './pages/settings/ApiDocs.jsx';
+import { WebhookSettings, WebhookFormPage } from './pages/settings/WebhookSettings.jsx';
 import { TeamMembers } from './pages/settings/TeamMembers.jsx';
 import { Sessions } from './pages/settings/Sessions.jsx';
 import { ActivityLog } from './pages/ActivityLog.jsx';
@@ -80,6 +81,9 @@ const App = () => {
           <Route index element={<ProfileSettings />} />
           <Route path="team" element={<TeamMembers />} />
           <Route path="api" element={<ApiSettings />} />
+          <Route path="webhooks" element={<WebhookSettings />} />
+          <Route path="webhooks/new" element={<WebhookFormPage />} />
+          <Route path="webhooks/:id/edit" element={<WebhookFormPage />} />
           <Route path="api-docs" element={<ApiDocs />} />
           <Route path="devices" element={<Sessions />} />
           <Route path="activity" element={<ActivityLog />} />

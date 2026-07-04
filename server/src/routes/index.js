@@ -8,6 +8,7 @@ import apiKeyRoutes from './apiKey.routes.js';
 import teamRoutes from './team.routes.js';
 import notificationRoutes from './notification.routes.js';
 import bookmarkRoutes from './bookmark.routes.js';
+import webhookRoutes from './webhook.routes.js';
 import { activityLogger } from '../middleware/activityLog.middleware.js';
 
 const router = Router();
@@ -25,5 +26,6 @@ router.use('/api-keys', apiKeyRoutes);
 router.use('/team', teamRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/bookmarks', bookmarkRoutes);
+router.use('/webhooks', webhookRoutes);
 
 export default router;

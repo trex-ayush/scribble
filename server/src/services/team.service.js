@@ -3,12 +3,19 @@ import { User } from '../models/user.model.js';
 import { ActivityLog } from '../models/activityLog.model.js';
 import { ApiError } from '../utils/ApiError.js';
 import { notificationService } from './notification.service.js';
+import { webhookService } from './webhook.service.js';
 
 // What each role can do on the owner's posts.
 const ROLE_PERMISSIONS = {
   full: ['read', 'create', 'update', 'delete', 'publish'],
   read: ['read'],
 };
+
+// Shared payload shape for team.* webhooks.
+const teamHookData = (member, role) => ({
+  member: { id: member._id, username: member.username, name: member.name },
+  role,
+});
 
 export const teamService = {
   // Check whether userId has permission to perform action on owner's content.
@@ -53,6 +60,7 @@ export const teamService = {
       actor: ownerId,
       type: 'team_add',
     });
+    webhookService.dispatch(ownerId, 'team.member_added', teamHookData(target, role));
 
     return TeamMember.findById(membership._id)
       .populate('member', 'username name email')
@@ -61,8 +69,10 @@ export const teamService = {
 
   // Owner removes a member or cancels a pending invite.
   async removeMember(ownerId, memberId) {
-    const result = await TeamMember.findOneAndDelete({ owner: ownerId, member: memberId });
+    const result = await TeamMember.findOneAndDelete({ owner: ownerId, member: memberId })
+      .populate('member', 'username name');
     if (!result) throw ApiError.notFound('Member not found');
+    webhookService.dispatch(ownerId, 'team.member_removed', teamHookData(result.member, result.role));
   },
 
   // Owner changes a member's role.
@@ -73,6 +83,7 @@ export const teamService = {
       { new: true }
     ).populate('member', 'username name email');
     if (!membership) throw ApiError.notFound('Member not found');
+    webhookService.dispatch(ownerId, 'team.role_changed', teamHookData(membership.member, role));
     return membership;
   },
 
