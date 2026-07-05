@@ -120,7 +120,7 @@ const SearchBar = ({ className = '' }) => {
       <Search
         size={16}
         strokeWidth={2.5}
-        className="absolute left-3 top-1/2 -translate-y-1/2 text-pencil/40 pointer-events-none z-10"
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-pencil/40 pointer-events-none z-10"
       />
       <input
         type="text"
@@ -131,7 +131,7 @@ const SearchBar = ({ className = '' }) => {
         placeholder="Search stories & people..."
         aria-label="Search"
         autoComplete="off"
-        className="w-full font-body text-sm pl-9 pr-3 py-2 bg-white border-2 border-pencil
+        className="w-full font-body text-sm pl-4 pr-9 py-2 bg-white border-2 border-pencil
                    placeholder:text-pencil/40 focus:outline-none focus:border-ink focus:ring-2 focus:ring-ink/20
                    transition-all duration-100"
         style={{ borderRadius: '12px 5px 12px 5px / 5px 12px 5px 12px' }}
