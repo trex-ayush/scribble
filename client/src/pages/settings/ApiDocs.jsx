@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { BookOpen, Copy, Check, ChevronDown, ChevronRight, Lock, Unlock } from 'lucide-react';
 import { Card } from '../../components/ui/Card.jsx';
 
-const BASE_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/v1`;
+// API is same-origin (/api proxied in dev, reverse-proxied in prod), so the
+// docs show whatever host the app is running on; VITE_API_URL can override.
+const BASE_URL = `${import.meta.env.VITE_API_URL || window.location.origin}/api/v1`;
 
 /* ─── tiny helpers ─────────────────────────────────────────────────────────── */
 
